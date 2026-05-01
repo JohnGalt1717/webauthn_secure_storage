@@ -1,0 +1,31 @@
+name: webauthn_secure_storage_web
+description: Web implementation of the webauthn_secure_storage federated plugin.
+version: 0.1.0
+homepage: https://github.com/jameshancock/webauthn_secure_storage
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: ">=3.4.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_web_plugins:
+    sdk: flutter
+  webauthn_secure_storage_platform_interface:
+    path: ../webauthn_secure_storage_platform_interface
+  web: ">=0.5.0 <2.0.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: '>=5.0.0 <7.0.0'
+
+flutter:
+  plugin:
+    implements: webauthn_secure_storage
+    platforms:
+      web:
+        pluginClass: BiometricStorageWeb
+        fileName: webauthn_secure_storage_web.dart

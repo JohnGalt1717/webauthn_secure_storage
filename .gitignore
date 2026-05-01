@@ -1,0 +1,47 @@
+# macOS
+.DS_Store
+
+# Editor settings
+.idea/
+*.iml
+.vscode/
+
+# Dart / Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.pub-cache/
+pubspec.lock
+pubspec_overrides.yaml
+
+# Build output
+build/
+out/
+coverage/
+test_cache/
+**/build/
+**/.dart_tool/
+**/.flutter-plugins-dependencies
+**/Generated.xcconfig
+**/Flutter/ephemeral/
+**/.symlinks/
+**/flutter/ephemeral/
+
+# Android / Gradle
+.gradle/
+.gradletasknamecache
+**/android/.gradle/
+**/android/.idea/
+**/local.properties
+
+# CocoaPods / SwiftPM
+**/Pods/
+**/Podfile.lock
+.build/
+.swiftpm/
+
+# Misc generated files
+example/android/app/_debug-full-r8-config.txt
+

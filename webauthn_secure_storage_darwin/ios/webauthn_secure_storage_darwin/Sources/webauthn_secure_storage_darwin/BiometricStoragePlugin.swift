@@ -1,0 +1,17 @@
+import Flutter
+
+public class BiometricStoragePlugin: NSObject, FlutterPlugin {
+  private let impl = BiometricStorageImpl(storageError: { (code, message, details) -> Any in
+    FlutterError(code: code, message: message, details: details)
+  }, storageMethodNotImplemented: FlutterMethodNotImplemented)
+
+  public static func register(with registrar: FlutterPluginRegistrar) {
+    let channel = FlutterMethodChannel(name: "webauthn_secure_storage", binaryMessenger: registrar.messenger())
+    let instance = BiometricStoragePlugin()
+    registrar.addMethodCallDelegate(instance, channel: channel)
+  }
+  
+  public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    impl.handle(StorageMethodCall(method: call.method, arguments: call.arguments), result: result)
+  }
+}

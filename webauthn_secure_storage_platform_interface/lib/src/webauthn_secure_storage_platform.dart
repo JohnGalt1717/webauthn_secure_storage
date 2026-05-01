@@ -1,0 +1,164 @@
+import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import 'passkey_types.dart';
+import 'types.dart';
+
+abstract class BiometricStoragePlatform extends PlatformInterface {
+  BiometricStoragePlatform() : super(token: _token);
+
+  static final Object _token = Object();
+
+  static BiometricStoragePlatform _instance =
+      UnsupportedBiometricStoragePlatform();
+
+  static BiometricStoragePlatform get instance => _instance;
+
+  static set instance(BiometricStoragePlatform instance) {
+    PlatformInterface.verifyToken(instance, _token);
+    _instance = instance;
+  }
+
+  Future<CanAuthenticateResponse> canAuthenticate({
+    StorageFileInitOptions? options,
+  });
+
+  Future<PasskeyAvailability> getPasskeyAvailability() async =>
+      const PasskeyAvailability.unsupported();
+
+  Future<bool> isPasskeySupported() async =>
+      (await getPasskeyAvailability()).isSupported;
+
+  Future<bool> isPasskeyAvailable() async =>
+      (await getPasskeyAvailability()).isAvailable;
+
+  Future<PublicKeyCredentialAttestationJson> registerPasskey(
+    PublicKeyCredentialCreationOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'No webauthn_secure_storage passkey implementation registered.',
+    );
+  }
+
+  Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
+    PublicKeyCredentialRequestOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'No webauthn_secure_storage passkey implementation registered.',
+    );
+  }
+
+  Future<bool> isSupported({
+    StorageFileInitOptions? options,
+  }) async =>
+      (await canAuthenticate(options: options)).isStorageSupported;
+
+  Future<bool> linuxCheckAppArmorError();
+
+  Future<bool?> init(
+    String name, {
+    StorageFileInitOptions? options,
+    bool forceInit = false,
+  });
+
+  Future<String?> read(
+    String name,
+    PromptInfo promptInfo, {
+    bool forceBiometricAuthentication = false,
+  });
+
+  Future<bool> exists(
+    String name,
+    PromptInfo promptInfo,
+  );
+
+  Future<bool?> delete(
+    String name,
+    PromptInfo promptInfo,
+  );
+
+  Future<void> write(
+    String name,
+    String content,
+    PromptInfo promptInfo, {
+    bool forceBiometricAuthentication = false,
+  });
+
+  Future<void> dispose(
+    String name,
+    PromptInfo promptInfo,
+  );
+}
+
+class UnsupportedBiometricStoragePlatform extends BiometricStoragePlatform {
+  @override
+  Future<CanAuthenticateResponse> canAuthenticate({
+    StorageFileInitOptions? options,
+  }) async =>
+      CanAuthenticateResponse.unsupported;
+
+  @override
+  Future<PasskeyAvailability> getPasskeyAvailability() async =>
+      const PasskeyAvailability.unsupported();
+
+  @override
+  Future<bool?> init(
+    String name, {
+    StorageFileInitOptions? options,
+    bool forceInit = false,
+  }) async =>
+      false;
+
+  @override
+  Future<bool> isSupported({
+    StorageFileInitOptions? options,
+  }) async =>
+      false;
+
+  @override
+  Future<bool> linuxCheckAppArmorError() async => false;
+
+  @override
+  Future<String?> read(
+    String name,
+    PromptInfo promptInfo, {
+    bool forceBiometricAuthentication = false,
+  }) {
+    throw UnsupportedError(
+        'No webauthn_secure_storage platform implementation registered.');
+  }
+
+  @override
+  Future<bool> exists(
+    String name,
+    PromptInfo promptInfo,
+  ) {
+    throw UnsupportedError(
+        'No webauthn_secure_storage platform implementation registered.');
+  }
+
+  @override
+  Future<bool?> delete(
+    String name,
+    PromptInfo promptInfo,
+  ) {
+    throw UnsupportedError(
+        'No webauthn_secure_storage platform implementation registered.');
+  }
+
+  @override
+  Future<void> write(
+    String name,
+    String content,
+    PromptInfo promptInfo, {
+    bool forceBiometricAuthentication = false,
+  }) {
+    throw UnsupportedError(
+        'No webauthn_secure_storage platform implementation registered.');
+  }
+
+  @override
+  Future<void> dispose(
+    String name,
+    PromptInfo promptInfo,
+  ) async {}
+}
