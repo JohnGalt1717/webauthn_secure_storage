@@ -88,7 +88,7 @@ final class _Credential extends Struct {
 }
 
 class BiometricStorageWindows extends BiometricStoragePlatform {
-  static const namePrefix = 'design.codeux.authpass.';
+  static const namePrefix = 'webauthn_secure_storage.';
 
   static void registerWith() {
     BiometricStoragePlatform.instance = BiometricStorageWindows();

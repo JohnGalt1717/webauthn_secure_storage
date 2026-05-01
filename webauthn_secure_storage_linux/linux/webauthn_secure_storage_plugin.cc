@@ -12,7 +12,7 @@ const char kMethodRead[] = "read";
 const char kMethodWrite[] = "write";
 const char kMethodDelete[] = "delete";
 const char kMethodExists[] = "exists";
-const char kNamePrefix[] = "design.codeux.authpass";
+const char kNamePrefix[] = "webauthn_secure_storage";
 
 #define METHOD_PARAM_NAME(varName, args) \
     g_autofree gchar * varName = g_strdup_printf("%s.%s", kNamePrefix, fl_value_get_string(fl_value_lookup_string(args, "name")))

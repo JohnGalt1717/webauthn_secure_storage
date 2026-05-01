@@ -1,7 +1,7 @@
 name: webauthn_secure_storage_web
 description: Web implementation of the webauthn_secure_storage federated plugin.
 version: 0.1.0
-homepage: https://github.com/jameshancock/webauthn_secure_storage
+homepage: https://github.com/JohnGalt1717/webauthn_secure_storage
 publish_to: 'none'
 
 environment:
