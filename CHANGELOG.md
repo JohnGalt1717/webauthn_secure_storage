@@ -11,10 +11,20 @@
 
 ### Data-migration note for Linux users
 
-The libsecret schema name has changed from `"design.codeux.BiometricStorage"`
-to `"dev.webauthn_secure_storage"`. Secrets written by the upstream
-`biometric_storage` plugin will not be visible to this package; they remain in
-the keyring under the old schema and must be re-written after upgrading.
+The libsecret schema name for new writes is now `"dev.webauthn_secure_storage"`.
+To preserve upgrade compatibility, reads, existence checks, and deletes also
+fall back to the upstream schema `"design.codeux.BiometricStorage"` and the
+legacy key prefix when needed.
 
-There is no automatic migration. To migrate, read the value with the upstream
-plugin before upgrading, then write it again using this package after upgrading.
+Existing Linux secrets remain readable after upgrade. They will continue to use
+the legacy schema until they are re-written with this package.
+
+### Data-migration note for Apple platforms
+
+New writes now use the keychain service `"flutter_webauthn_secure_storage"`.
+To preserve upgrade compatibility, reads, existence checks, and deletes also
+fall back to the upstream keychain service `"flutter_biometric_storage"` when
+needed.
+
+Existing iOS and macOS secrets remain readable after upgrade. They will move to
+the new service only after being re-written with this package.

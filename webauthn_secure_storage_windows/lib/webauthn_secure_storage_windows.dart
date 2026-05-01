@@ -98,7 +98,8 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   String _storageName(String name, {bool legacy = false}) =>
       '${legacy ? legacyNamePrefix : namePrefix}$name';
 
-  Future<bool> _deleteByStorageName(String storageName, String logicalName) async {
+  Future<bool> _deleteByStorageName(
+      String storageName, String logicalName) async {
     final namePointer = storageName.toNativeUtf16(allocator: calloc);
     try {
       final result = _credDelete(namePointer, _credTypeGeneric, 0);
@@ -117,7 +118,8 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
     return true;
   }
 
-  Future<String?> _readByStorageName(String storageName, String logicalName) async {
+  Future<String?> _readByStorageName(
+      String storageName, String logicalName) async {
     final credPointer = calloc<Pointer<_Credential>>();
     final namePointer = storageName.toNativeUtf16(allocator: calloc);
     try {

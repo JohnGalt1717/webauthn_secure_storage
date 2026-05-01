@@ -7,7 +7,7 @@ Darwin implementation for webauthn_secure_storage.
                        DESC
   s.homepage         = 'https://github.com/JohnGalt1717/webauthn_secure_storage'
   s.license          = { :file => '../../LICENSE' }
-  s.author           = { 'James Hancock' => 'support@example.com' }
+  s.author           = { 'JohnGalt1717' => 'JohnGalt1717@users.noreply.github.com' }
   s.source           = { :path => '.' }
   s.source_files     = 'webauthn_secure_storage_darwin/Sources/webauthn_secure_storage_darwin/**/*.swift'
   s.dependency 'FlutterMacOS'

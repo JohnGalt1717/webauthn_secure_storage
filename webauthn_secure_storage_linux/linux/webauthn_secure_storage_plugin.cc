@@ -15,6 +15,12 @@ const char kMethodExists[] = "exists";
 const char kNamePrefix[] = "webauthn_secure_storage";
 const char kLegacyNamePrefix[] = "design.codeux.authpass";
 
+typedef enum {
+  kLookupStageCurrent = 0,
+  kLookupStageLegacyPrefix = 1,
+  kLookupStageLegacySchema = 2,
+} LookupStage;
+
 #define METHOD_PARAM_NAME(varName, prefix, args) \
   g_autofree gchar * varName = g_strdup_printf("%s.%s", prefix, fl_value_get_string(fl_value_lookup_string(args, "name")))
 
@@ -34,13 +40,13 @@ G_DEFINE_TYPE(BiometricStoragePlugin, webauthn_secure_storage_plugin, g_object_g
 typedef struct {
   FlMethodCall *method_call;
   gchar *entry_name;
-  gboolean tried_legacy;
+  LookupStage stage;
 } SecretLookupContext;
 
 typedef struct {
   FlMethodCall *method_call;
   gchar *entry_name;
-  gboolean tried_legacy;
+  LookupStage stage;
 } SecretDeleteContext;
 
 static SecretLookupContext *secret_lookup_context_new(FlMethodCall *method_call, const gchar *entry_name) {
@@ -105,6 +111,25 @@ const SecretSchema * biometric_get_schema (void) {
     return &the_schema;
 }
 
+const SecretSchema * biometric_legacy_schema (void) {
+  static const SecretSchema legacy_schema = {
+    "design.codeux.BiometricStorage", SECRET_SCHEMA_NONE,
+    {
+      {  "name", SECRET_SCHEMA_ATTRIBUTE_STRING },
+    }
+  };
+  return &legacy_schema;
+}
+
+static const SecretSchema * schema_for_stage(LookupStage stage) {
+  return stage == kLookupStageLegacySchema ? biometric_legacy_schema() : BIOMETRIC_SCHEMA;
+}
+
+static gchar * entry_name_for_stage(LookupStage stage, const gchar *entry_name) {
+  const gchar *prefix = stage == kLookupStageCurrent ? kNamePrefix : kLegacyNamePrefix;
+  return g_strdup_printf("%s.%s", prefix, entry_name);
+}
+
 static void on_password_stored(GObject *source, GAsyncResult *result, gpointer user_data) {
   GError *error = NULL;
   FlMethodCall *method_call = (FlMethodCall *)user_data;
@@ -132,10 +157,10 @@ static void on_password_cleared(GObject *source, GAsyncResult *result, gpointer 
   if (error != NULL) {
     response = _handle_error("Failed to delete secret", error);
     g_error_free(error);
-  } else if (!removed && !context->tried_legacy) {
-    context->tried_legacy = TRUE;
-    g_autofree gchar *legacy_name = g_strdup_printf("%s.%s", kLegacyNamePrefix, context->entry_name);
-    secret_password_clear(BIOMETRIC_SCHEMA, NULL, on_password_cleared,
+  } else if (!removed && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_clear(schema_for_stage(context->stage), NULL, on_password_cleared,
                           context, "name", legacy_name, NULL);
     return;
   } else {
@@ -155,10 +180,10 @@ static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer u
   if (error != NULL) {
     response = _handle_error("Failed to lookup secret", error);
     g_error_free(error);
-  } else if (password == NULL && !context->tried_legacy) {
-    context->tried_legacy = TRUE;
-    g_autofree gchar *legacy_name = g_strdup_printf("%s.%s", kLegacyNamePrefix, context->entry_name);
-    secret_password_lookup(BIOMETRIC_SCHEMA, NULL, on_password_lookup,
+  } else if (password == NULL && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_lookup(schema_for_stage(context->stage), NULL, on_password_lookup,
                            context, "name", legacy_name, NULL);
     return;
   } else if (password == NULL) {
@@ -181,10 +206,10 @@ static void on_password_exists(GObject *source, GAsyncResult *result, gpointer u
   if (error != NULL) {
     response = _handle_error("Failed to lookup secret", error);
     g_error_free(error);
-  } else if (password == NULL && !context->tried_legacy) {
-    context->tried_legacy = TRUE;
-    g_autofree gchar *legacy_name = g_strdup_printf("%s.%s", kLegacyNamePrefix, context->entry_name);
-    secret_password_lookup(BIOMETRIC_SCHEMA, NULL, on_password_exists,
+  } else if (password == NULL && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_lookup(schema_for_stage(context->stage), NULL, on_password_exists,
                            context, "name", legacy_name, NULL);
     return;
   } else {
