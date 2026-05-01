@@ -18,6 +18,9 @@ typedef struct {
 
 FLUTTER_PLUGIN_EXPORT GType webauthn_secure_storage_plugin_get_type();
 
+FLUTTER_PLUGIN_EXPORT void biometric_storage_plugin_register_with_registrar(
+  FlPluginRegistrar* registrar);
+
 FLUTTER_PLUGIN_EXPORT void webauthn_secure_storage_linux_plugin_register_with_registrar(
     FlPluginRegistrar* registrar);
 
