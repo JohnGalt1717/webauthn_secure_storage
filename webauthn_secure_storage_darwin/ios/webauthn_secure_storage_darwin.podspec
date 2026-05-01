@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.description      = <<-DESC
 Darwin implementation for webauthn_secure_storage.
                        DESC
-  s.homepage         = 'https://github.com/jameshancock/webauthn_secure_storage'
+  s.homepage         = 'https://github.com/JohnGalt1717/webauthn_secure_storage'
   s.license          = { :file => '../../LICENSE' }
   s.author           = { 'James Hancock' => 'support@example.com' }
   s.source           = { :path => '.' }

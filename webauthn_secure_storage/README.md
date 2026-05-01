@@ -109,9 +109,6 @@ passkey APIs when WebAuthn is available. For local secret storage or unlock,
 PRF support is still required. When PRF is not available, the intended fallback
 remains your regular web login/session design or a non-PRF secure access path.
 
-Check out [AuthPass Password Manager](https://authpass.app/) for a app which
-makes heavy use of this plugin.
-
 ## Getting Started
 
 ### Installation
