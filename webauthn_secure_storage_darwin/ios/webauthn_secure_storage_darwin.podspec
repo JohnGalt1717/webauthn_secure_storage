@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'webauthn_secure_storage_darwin'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'Darwin implementation for webauthn_secure_storage.'
   s.description      = <<-DESC
 Darwin implementation for webauthn_secure_storage.

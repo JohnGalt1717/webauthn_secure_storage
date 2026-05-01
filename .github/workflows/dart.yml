@@ -2,32 +2,37 @@ name: Dart CI
 
 on: [push]
 
+permissions:
+  contents: read
+
 jobs:
-  test:
-
-    runs-on: ubuntu-22.04
-    
+  analyze:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v1
-    - uses: actions/setup-java@v1
-      with:
-        java-version: '12.x'
-    - uses: subosito/flutter-action@v1
-      with:
-        channel: 'stable' # or: 'dev' or 'beta'
-    - name: Install dependencies
-      run: flutter pub get
-    - name: Run tests
-      run: flutter test
-
-  web:
-    runs-on: windows-latest
-
-    steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # or: 'dev' or 'beta'
+          channel: 'stable'
+      - name: Analyze platform interface
+        run: cd webauthn_secure_storage_platform_interface && flutter pub get && flutter analyze
+      - name: Analyze app-facing package
+        run: cd webauthn_secure_storage && flutter pub get && flutter analyze
+      - name: Analyze web package
+        run: cd webauthn_secure_storage_web && flutter pub get && flutter analyze
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: Test platform interface
+        run: cd webauthn_secure_storage_platform_interface && flutter pub get && flutter test
+      - name: Test app-facing package
+        run: cd webauthn_secure_storage && flutter pub get && flutter test
+      - name: Test web package
+        run: cd webauthn_secure_storage_web && flutter pub get && flutter test
 
   build:
     runs-on: ${{ matrix.os }}
@@ -55,17 +60,16 @@ jobs:
           - buildcommand: web
             os: ubuntu-latest
 
-
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
       - uses: subosito/flutter-action@v2
         with:
-          channel: 'stable' # or: 'dev' or 'beta'
-      - uses: actions/setup-java@v3
+          channel: 'stable'
+      - uses: actions/setup-java@v4
         if: matrix.buildcommand == 'appbundle'
         with:
           java-version: '17'
-          distribution: 'oracle'
+          distribution: 'temurin'
       - name: Patch for linux build
         if: matrix.buildcommand == 'linux'
         run: |
@@ -77,4 +81,4 @@ jobs:
         if: matrix.buildcommand == 'macos' || matrix.buildcommand == 'linux'
         run: flutter config --enable-${{ matrix.buildcommand }}-desktop
       - name: Build for ${{ matrix.buildcommand }}
-        run: cd example && flutter build ${{ matrix.buildcommand }} ${{ matrix.buildargs }}
+        run: cd webauthn_secure_storage/example && flutter build ${{ matrix.buildcommand }} ${{ matrix.buildargs }}

@@ -58,7 +58,7 @@ static FlMethodResponse *handleInit(FlValue *args) {
 
 const SecretSchema * biometric_get_schema (void) {
     static const SecretSchema the_schema = {
-        "design.codeux.BiometricStorage", SECRET_SCHEMA_NONE,
+        "dev.webauthn_secure_storage", SECRET_SCHEMA_NONE,
         {
             {  "name", SECRET_SCHEMA_ATTRIBUTE_STRING },
         }

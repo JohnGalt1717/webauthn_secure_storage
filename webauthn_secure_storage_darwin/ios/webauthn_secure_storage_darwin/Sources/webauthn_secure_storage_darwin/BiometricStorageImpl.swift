@@ -34,10 +34,6 @@ class IOSPromptInfo {
        let accessTitle: String!
 }
 
-private func hpdebug(_ message: String) {
-       print(message);
-}
-
 class BiometricStorageImpl {
     
 	init(storageError: @escaping StorageError, storageMethodNotImplemented: Any) {
@@ -192,11 +188,7 @@ class BiometricStorageFile {
 			let context = LAContext()
 			if (initOptions.authenticationRequired) {
 				if let duration = initOptions.darwinTouchIDAuthenticationAllowableReuseDuration {
-					if #available(OSX 10.12, *) {
-						context.touchIDAuthenticationAllowableReuseDuration = Double(duration)
-					} else {
-						hpdebug("Pre OSX 10.12 no touchIDAuthenticationAllowableReuseDuration available. ignoring.")
-					}
+					context.touchIDAuthenticationAllowableReuseDuration = Double(duration)
 				}
                 
 				if let duration = initOptions.darwinTouchIDAuthenticationForceReuseContextDuration {
