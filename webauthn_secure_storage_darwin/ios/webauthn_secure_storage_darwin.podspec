@@ -1,13 +1,13 @@
 Pod::Spec.new do |s|
   s.name             = 'webauthn_secure_storage_darwin'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'Darwin implementation for webauthn_secure_storage.'
   s.description      = <<-DESC
 Darwin implementation for webauthn_secure_storage.
                        DESC
-  s.homepage         = 'https://github.com/jameshancock/webauthn_secure_storage'
+  s.homepage         = 'https://github.com/JohnGalt1717/webauthn_secure_storage'
   s.license          = { :file => '../../LICENSE' }
-  s.author           = { 'James Hancock' => 'support@example.com' }
+  s.author           = { 'JohnGalt1717' => 'JohnGalt1717@users.noreply.github.com' }
   s.source           = { :path => '.' }
   s.source_files = 'webauthn_secure_storage_darwin/Sources/webauthn_secure_storage_darwin/**/*.swift'
   s.dependency 'Flutter'

@@ -88,13 +88,68 @@ final class _Credential extends Struct {
 }
 
 class BiometricStorageWindows extends BiometricStoragePlatform {
-  static const namePrefix = 'design.codeux.authpass.';
+  static const namePrefix = 'webauthn_secure_storage.';
+  static const legacyNamePrefix = 'design.codeux.authpass.';
 
   static void registerWith() {
     BiometricStoragePlatform.instance = BiometricStorageWindows();
   }
 
-  String _storageName(String name) => '$namePrefix$name';
+  String _storageName(String name, {bool legacy = false}) =>
+      '${legacy ? legacyNamePrefix : namePrefix}$name';
+
+  Future<bool> _deleteByStorageName(
+      String storageName, String logicalName) async {
+    final namePointer = storageName.toNativeUtf16(allocator: calloc);
+    try {
+      final result = _credDelete(namePointer, _credTypeGeneric, 0);
+      if (result == 0) {
+        final errorCode = _getLastError();
+        if (errorCode == _errorNotFound) {
+          _logger.fine('Unable to find credential of name $logicalName');
+        } else {
+          _logger.warning('Error deleting credential $logicalName: $errorCode');
+        }
+        return false;
+      }
+    } finally {
+      calloc.free(namePointer);
+    }
+    return true;
+  }
+
+  Future<String?> _readByStorageName(
+      String storageName, String logicalName) async {
+    final credPointer = calloc<Pointer<_Credential>>();
+    final namePointer = storageName.toNativeUtf16(allocator: calloc);
+    try {
+      final result = _credRead(namePointer, _credTypeGeneric, 0, credPointer);
+      if (result == 0) {
+        final errorCode = _getLastError();
+        if (errorCode == _errorNotFound) {
+          _logger.fine('Unable to find credential of name $logicalName');
+        } else {
+          _logger.warning('Error reading credential $logicalName: $errorCode');
+        }
+        return null;
+      }
+
+      final cred = credPointer.value.ref;
+      if (cred.CredentialBlobSize == 0) {
+        return '';
+      }
+
+      final blob = Uint8List.fromList(
+        cred.CredentialBlob.asTypedList(cred.CredentialBlobSize),
+      );
+      final value = utf8.decode(blob);
+      _credFree(credPointer.value.cast<Void>());
+      return value;
+    } finally {
+      calloc.free(credPointer);
+      calloc.free(namePointer);
+    }
+  }
 
   @override
   Future<CanAuthenticateResponse> canAuthenticate({
@@ -117,24 +172,9 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   Future<bool?> delete(
     String name,
     PromptInfo promptInfo,
-  ) async {
-    final namePointer = _storageName(name).toNativeUtf16(allocator: calloc);
-    try {
-      final result = _credDelete(namePointer, _credTypeGeneric, 0);
-      if (result == 0) {
-        final errorCode = _getLastError();
-        if (errorCode == _errorNotFound) {
-          _logger.fine('Unable to find credential of name $name');
-        } else {
-          _logger.warning('Error deleting credential $name: $errorCode');
-        }
-        return false;
-      }
-    } finally {
-      calloc.free(namePointer);
-    }
-    return true;
-  }
+  ) async =>
+      await _deleteByStorageName(_storageName(name), name) ||
+      await _deleteByStorageName(_storageName(name, legacy: true), name);
 
   @override
   Future<String?> read(
@@ -142,35 +182,11 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
     PromptInfo promptInfo, {
     bool forceBiometricAuthentication = false,
   }) async {
-    final credPointer = calloc<Pointer<_Credential>>();
-    final namePointer = _storageName(name).toNativeUtf16(allocator: calloc);
-    try {
-      final result = _credRead(namePointer, _credTypeGeneric, 0, credPointer);
-      if (result == 0) {
-        final errorCode = _getLastError();
-        if (errorCode == _errorNotFound) {
-          _logger.fine('Unable to find credential of name $name');
-        } else {
-          _logger.warning('Error reading credential $name: $errorCode');
-        }
-        return null;
-      }
-
-      final cred = credPointer.value.ref;
-      if (cred.CredentialBlobSize == 0) {
-        return '';
-      }
-
-      final blob = Uint8List.fromList(
-        cred.CredentialBlob.asTypedList(cred.CredentialBlobSize),
-      );
-      final value = utf8.decode(blob);
-      _credFree(credPointer.value.cast<Void>());
-      return value;
-    } finally {
-      calloc.free(credPointer);
-      calloc.free(namePointer);
+    final currentValue = await _readByStorageName(_storageName(name), name);
+    if (currentValue != null) {
+      return currentValue;
     }
+    return _readByStorageName(_storageName(name, legacy: true), name);
   }
 
   @override

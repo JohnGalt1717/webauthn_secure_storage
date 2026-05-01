@@ -2,10 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 set(PROJECT_NAME "webauthn_secure_storage_linux")
 project(${PROJECT_NAME} LANGUAGES CXX)
 
-set(PLUGIN_NAME "webauthn_secure_storage_plugin")
+set(PLUGIN_NAME "webauthn_secure_storage_linux_plugin")
 
 add_library(${PLUGIN_NAME} SHARED
-  "${PLUGIN_NAME}.cc"
+  "webauthn_secure_storage_plugin.cc"
 )
 
 find_package(PkgConfig REQUIRED)

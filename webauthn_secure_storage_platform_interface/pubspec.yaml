@@ -1,18 +1,23 @@
 name: webauthn_secure_storage_platform_interface
 description: Platform interface for the webauthn_secure_storage federated plugin.
 version: 0.1.0
-homepage: https://github.com/jameshancock/webauthn_secure_storage
+homepage: https://github.com/JohnGalt1717/webauthn_secure_storage
 publish_to: 'none'
 
 environment:
-  sdk: '>=3.2.0 <4.0.0'
-  flutter: ">=3.4.0"
+  sdk: '>=3.11.0 <4.0.0'
+  flutter: ">=3.41.0"
 
 dependencies:
   flutter:
     sdk: flutter
   logging: ">=1.0.0 <2.0.0"
   plugin_platform_interface: ">=2.0.0 <3.0.0"
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: '>=5.0.0 <7.0.0'
 
 flutter:
   plugin:

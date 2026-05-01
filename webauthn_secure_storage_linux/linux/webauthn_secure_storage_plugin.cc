@@ -12,10 +12,17 @@ const char kMethodRead[] = "read";
 const char kMethodWrite[] = "write";
 const char kMethodDelete[] = "delete";
 const char kMethodExists[] = "exists";
-const char kNamePrefix[] = "design.codeux.authpass";
+const char kNamePrefix[] = "webauthn_secure_storage";
+const char kLegacyNamePrefix[] = "design.codeux.authpass";
 
-#define METHOD_PARAM_NAME(varName, args) \
-    g_autofree gchar * varName = g_strdup_printf("%s.%s", kNamePrefix, fl_value_get_string(fl_value_lookup_string(args, "name")))
+typedef enum {
+  kLookupStageCurrent = 0,
+  kLookupStageLegacyPrefix = 1,
+  kLookupStageLegacySchema = 2,
+} LookupStage;
+
+#define METHOD_PARAM_NAME(varName, prefix, args) \
+  g_autofree gchar * varName = g_strdup_printf("%s.%s", prefix, fl_value_get_string(fl_value_lookup_string(args, "name")))
 
 #define WEBAUTHN_SECURE_STORAGE_PLUGIN(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), webauthn_secure_storage_plugin_get_type(), \
@@ -29,6 +36,44 @@ struct _BiometricStoragePlugin {
 };
 
 G_DEFINE_TYPE(BiometricStoragePlugin, webauthn_secure_storage_plugin, g_object_get_type())
+
+typedef struct {
+  FlMethodCall *method_call;
+  gchar *entry_name;
+  LookupStage stage;
+} SecretLookupContext;
+
+typedef struct {
+  FlMethodCall *method_call;
+  gchar *entry_name;
+  LookupStage stage;
+} SecretDeleteContext;
+
+static SecretLookupContext *secret_lookup_context_new(FlMethodCall *method_call, const gchar *entry_name) {
+  SecretLookupContext *context = g_new0(SecretLookupContext, 1);
+  context->method_call = g_object_ref(method_call);
+  context->entry_name = g_strdup(entry_name);
+  return context;
+}
+
+static void secret_lookup_context_free(SecretLookupContext *context) {
+  g_clear_object(&context->method_call);
+  g_free(context->entry_name);
+  g_free(context);
+}
+
+static SecretDeleteContext *secret_delete_context_new(FlMethodCall *method_call, const gchar *entry_name) {
+  SecretDeleteContext *context = g_new0(SecretDeleteContext, 1);
+  context->method_call = g_object_ref(method_call);
+  context->entry_name = g_strdup(entry_name);
+  return context;
+}
+
+static void secret_delete_context_free(SecretDeleteContext *context) {
+  g_clear_object(&context->method_call);
+  g_free(context->entry_name);
+  g_free(context);
+}
 
 static FlMethodResponse* _handle_error(const gchar* message, GError *error) {
     const gchar* domain = g_quark_to_string(error->domain);
@@ -58,12 +103,31 @@ static FlMethodResponse *handleInit(FlValue *args) {
 
 const SecretSchema * biometric_get_schema (void) {
     static const SecretSchema the_schema = {
-        "design.codeux.BiometricStorage", SECRET_SCHEMA_NONE,
+        "dev.webauthn_secure_storage", SECRET_SCHEMA_NONE,
         {
             {  "name", SECRET_SCHEMA_ATTRIBUTE_STRING },
         }
     };
     return &the_schema;
+}
+
+const SecretSchema * biometric_legacy_schema (void) {
+  static const SecretSchema legacy_schema = {
+    "design.codeux.BiometricStorage", SECRET_SCHEMA_NONE,
+    {
+      {  "name", SECRET_SCHEMA_ATTRIBUTE_STRING },
+    }
+  };
+  return &legacy_schema;
+}
+
+static const SecretSchema * schema_for_stage(LookupStage stage) {
+  return stage == kLookupStageLegacySchema ? biometric_legacy_schema() : BIOMETRIC_SCHEMA;
+}
+
+static gchar * entry_name_for_stage(LookupStage stage, const gchar *entry_name) {
+  const gchar *prefix = stage == kLookupStageCurrent ? kNamePrefix : kLegacyNamePrefix;
+  return g_strdup_printf("%s.%s", prefix, entry_name);
 }
 
 static void on_password_stored(GObject *source, GAsyncResult *result, gpointer user_data) {
@@ -85,7 +149,7 @@ static void on_password_stored(GObject *source, GAsyncResult *result, gpointer u
 
 static void on_password_cleared(GObject *source, GAsyncResult *result, gpointer user_data) {
   GError *error = NULL;
-  FlMethodCall *method_call = (FlMethodCall *)user_data;
+  SecretDeleteContext *context = (SecretDeleteContext *)user_data;
   g_autoptr(FlMethodResponse) response = nullptr;
 
   gboolean removed = secret_password_clear_finish(result, &error);
@@ -93,16 +157,22 @@ static void on_password_cleared(GObject *source, GAsyncResult *result, gpointer 
   if (error != NULL) {
     response = _handle_error("Failed to delete secret", error);
     g_error_free(error);
+  } else if (!removed && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_clear(schema_for_stage(context->stage), NULL, on_password_cleared,
+                          context, "name", legacy_name, NULL);
+    return;
   } else {
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_bool(removed)));
   }
-  fl_method_call_respond(method_call, response, nullptr);
-  g_object_unref(method_call);
+  fl_method_call_respond(context->method_call, response, nullptr);
+  secret_delete_context_free(context);
 }
 
 static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer user_data) {
   GError *error = NULL;
-  FlMethodCall *method_call = (FlMethodCall *)user_data;
+  SecretLookupContext *context = (SecretLookupContext *)user_data;
   g_autoptr(FlMethodResponse) response = nullptr;
 
   gchar *password = secret_password_lookup_finish(result, &error);
@@ -110,19 +180,25 @@ static void on_password_lookup(GObject *source, GAsyncResult *result, gpointer u
   if (error != NULL) {
     response = _handle_error("Failed to lookup secret", error);
     g_error_free(error);
+  } else if (password == NULL && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_lookup(schema_for_stage(context->stage), NULL, on_password_lookup,
+                           context, "name", legacy_name, NULL);
+    return;
   } else if (password == NULL) {
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_null()));
   } else {
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(fl_value_new_string(password)));
     secret_password_free(password);
   }
-  fl_method_call_respond(method_call, response, nullptr);
-  g_object_unref(method_call);
+  fl_method_call_respond(context->method_call, response, nullptr);
+  secret_lookup_context_free(context);
 }
 
 static void on_password_exists(GObject *source, GAsyncResult *result, gpointer user_data) {
   GError *error = NULL;
-  FlMethodCall *method_call = (FlMethodCall *)user_data;
+  SecretLookupContext *context = (SecretLookupContext *)user_data;
   g_autoptr(FlMethodResponse) response = nullptr;
 
   gchar *password = secret_password_lookup_finish(result, &error);
@@ -130,6 +206,12 @@ static void on_password_exists(GObject *source, GAsyncResult *result, gpointer u
   if (error != NULL) {
     response = _handle_error("Failed to lookup secret", error);
     g_error_free(error);
+  } else if (password == NULL && context->stage != kLookupStageLegacySchema) {
+    context->stage = (LookupStage)(context->stage + 1);
+    g_autofree gchar *legacy_name = entry_name_for_stage(context->stage, context->entry_name);
+    secret_password_lookup(schema_for_stage(context->stage), NULL, on_password_exists,
+                           context, "name", legacy_name, NULL);
+    return;
   } else {
     response = FL_METHOD_RESPONSE(fl_method_success_response_new(
         fl_value_new_bool(password != NULL)));
@@ -137,8 +219,8 @@ static void on_password_exists(GObject *source, GAsyncResult *result, gpointer u
       secret_password_free(password);
     }
   }
-  fl_method_call_respond(method_call, response, nullptr);
-  g_object_unref(method_call);
+  fl_method_call_respond(context->method_call, response, nullptr);
+  secret_lookup_context_free(context);
 }
 
 static void webauthn_secure_storage_plugin_handle_method_call(BiometricStoragePlugin *self, FlMethodCall *method_call) {
@@ -153,7 +235,7 @@ static void webauthn_secure_storage_plugin_handle_method_call(BiometricStoragePl
   } else if (strcmp(method, "init") == 0) {
     response = handleInit(args);
   } else if (IS_METHOD(method, kMethodWrite)) {
-    METHOD_PARAM_NAME(name, args);
+    METHOD_PARAM_NAME(name, kNamePrefix, args);
     const gchar *content = fl_value_get_string(fl_value_lookup_string(args, "content"));
     g_object_ref(method_call);
     secret_password_store(BIOMETRIC_SCHEMA, SECRET_COLLECTION_DEFAULT, name,
@@ -161,22 +243,25 @@ static void webauthn_secure_storage_plugin_handle_method_call(BiometricStoragePl
                           "name", name, NULL);
     return;
   } else if (IS_METHOD(method, kMethodRead)) {
-    METHOD_PARAM_NAME(name, args);
-    g_object_ref(method_call);
+    const gchar *entry_name = fl_value_get_string(fl_value_lookup_string(args, "name"));
+    METHOD_PARAM_NAME(name, kNamePrefix, args);
+    SecretLookupContext *context = secret_lookup_context_new(method_call, entry_name);
     secret_password_lookup(BIOMETRIC_SCHEMA, NULL, on_password_lookup,
-                           method_call, "name", name, NULL);
+                           context, "name", name, NULL);
     return;
   } else if (IS_METHOD(method, kMethodExists)) {
-    METHOD_PARAM_NAME(name, args);
-    g_object_ref(method_call);
+    const gchar *entry_name = fl_value_get_string(fl_value_lookup_string(args, "name"));
+    METHOD_PARAM_NAME(name, kNamePrefix, args);
+    SecretLookupContext *context = secret_lookup_context_new(method_call, entry_name);
     secret_password_lookup(BIOMETRIC_SCHEMA, NULL, on_password_exists,
-                           method_call, "name", name, NULL);
+                           context, "name", name, NULL);
     return;
   } else if (IS_METHOD(method, kMethodDelete)) {
-    METHOD_PARAM_NAME(name, args);
-    g_object_ref(method_call);
+    const gchar *entry_name = fl_value_get_string(fl_value_lookup_string(args, "name"));
+    METHOD_PARAM_NAME(name, kNamePrefix, args);
+    SecretDeleteContext *context = secret_delete_context_new(method_call, entry_name);
     secret_password_clear(BIOMETRIC_SCHEMA, NULL, on_password_cleared,
-                          method_call, "name", name, NULL);
+                          context, "name", name, NULL);
     return;
   } else {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
@@ -200,7 +285,11 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call, 
   webauthn_secure_storage_plugin_handle_method_call(plugin, method_call);
 }
 
-void webauthn_secure_storage_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
+void biometric_storage_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
+  webauthn_secure_storage_linux_plugin_register_with_registrar(registrar);
+}
+
+void webauthn_secure_storage_linux_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
   BiometricStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(
       g_object_new(webauthn_secure_storage_plugin_get_type(), nullptr));
 

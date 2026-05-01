@@ -5,6 +5,6 @@
 
 version:
   revision: 4984d1a33dd6de2862578e3f08b4ca7dfce7d54b
-  channel: dev
+  channel: stable
 
 project_type: plugin

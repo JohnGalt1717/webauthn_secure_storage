@@ -4,6 +4,9 @@
 import Foundation
 import LocalAuthentication
 
+private let currentKeychainService = "flutter_webauthn_secure_storage"
+private let legacyKeychainService = "flutter_biometric_storage"
+
 typealias StorageCallback = (Any?) -> Void
 typealias StorageError = (String, String?, Any?) -> Any
 
@@ -32,10 +35,6 @@ class IOSPromptInfo {
        }
        let saveTitle: String!
        let accessTitle: String!
-}
-
-private func hpdebug(_ message: String) {
-       print(message);
 }
 
 class BiometricStorageImpl {
@@ -192,11 +191,7 @@ class BiometricStorageFile {
 			let context = LAContext()
 			if (initOptions.authenticationRequired) {
 				if let duration = initOptions.darwinTouchIDAuthenticationAllowableReuseDuration {
-					if #available(OSX 10.12, *) {
-						context.touchIDAuthenticationAllowableReuseDuration = Double(duration)
-					} else {
-						hpdebug("Pre OSX 10.12 no touchIDAuthenticationAllowableReuseDuration available. ignoring.")
-					}
+					context.touchIDAuthenticationAllowableReuseDuration = Double(duration)
 				}
                 
 				if let duration = initOptions.darwinTouchIDAuthenticationForceReuseContextDuration {
@@ -218,10 +213,10 @@ class BiometricStorageFile {
 		_context = nil
 	}
     
-	private func baseQuery(_ result: @escaping StorageCallback) -> [String: Any]? {
+	private func baseQuery(_ result: @escaping StorageCallback, service: String = currentKeychainService) -> [String: Any]? {
 		var query = [
 			kSecClass as String: kSecClassGenericPassword,
-			kSecAttrService as String: "flutter_webauthn_secure_storage",
+			kSecAttrService as String: service,
 			kSecAttrAccount as String: name,
 		] as [String : Any]
 		if initOptions.authenticationRequired {
@@ -255,70 +250,45 @@ class BiometricStorageFile {
 			kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly,
 			accessControlFlags,
 			&error) else {
-			hpdebug("Error while creating access control flags. \(String(describing: error))")
 			result(storageError("writing data", "error writing data", "\(String(describing: error))"));
 			return nil
 		}
 		
 		return access
 	}
-    
-	func read(_ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo, _ forceBiometricAuthentication: Bool) {
+
+	private func readQuery(_ query: [String: Any], _ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo, _ forceBiometricAuthentication: Bool) -> String?? {
+		var query = query
 		if(forceBiometricAuthentication){
 			_context = nil
-		}
-		
-		guard var query = baseQuery(result) else {
-			return;
 		}
 		query[kSecMatchLimit as String] = kSecMatchLimitOne
 		query[kSecUseOperationPrompt as String] = promptInfo.accessTitle
 		query[kSecReturnAttributes as String] = true
 		query[kSecReturnData as String] = true
 		query[kSecUseAuthenticationContext as String] = context
-		
+
 		var item: CFTypeRef?
-		
 		let status = SecItemCopyMatching(query as CFDictionary, &item)
 		guard status != errSecItemNotFound else {
-			result(nil)
-			return
+			return .some(nil)
 		}
 		guard status == errSecSuccess else {
 			handleOSStatusError(status, result, "Error retrieving item. \(status)")
-			return
+			return nil
 		}
 		guard let existingItem = item as? [String : Any],
 			  let data = existingItem[kSecValueData as String] as? Data,
 			  let dataString = String(data: data, encoding: String.Encoding.utf8)
 		else {
 			result(storageError("RetrieveError", "Unexpected data.", nil))
-			return
+			return nil
 		}
-		result(dataString)
-	}
-    
-	func delete(_ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo) {
-		guard let query = baseQuery(result) else {
-			return;
-		}
-		let status = SecItemDelete(query as CFDictionary)
-		if status == errSecSuccess {
-			result(true)
-			return
-		}
-		if status == errSecItemNotFound {
-			hpdebug("Item not in keychain. Nothing to delete.")
-			result(true)
-			return
-		}
-		handleOSStatusError(status, result, "writing data")
+		return .some(dataString)
 	}
 
-	func exists(_ result: @escaping StorageCallback) {
-		guard var query = baseQuery(result) else {
-			return
-		}
+	private func existsQuery(_ query: [String: Any], _ result: @escaping StorageCallback) -> Bool? {
+		var query = query
 		query[kSecMatchLimit as String] = kSecMatchLimitOne
 		query[kSecReturnAttributes as String] = false
 		if #available(iOS 9.0, macOS 10.11, *) {
@@ -328,11 +298,87 @@ class BiometricStorageFile {
 		let status = SecItemCopyMatching(query as CFDictionary, nil)
 		switch status {
 		case errSecSuccess, errSecInteractionNotAllowed:
-			result(true)
+			return true
 		case errSecItemNotFound:
-			result(false)
+			return false
 		default:
 			handleOSStatusError(status, result, "checking for item")
+			return nil
+		}
+	}
+
+	private func deleteQuery(_ query: [String: Any], _ result: @escaping StorageCallback) -> Bool? {
+		let status = SecItemDelete(query as CFDictionary)
+		if status == errSecSuccess {
+			return true
+		}
+		if status == errSecItemNotFound {
+			return false
+		}
+		handleOSStatusError(status, result, "writing data")
+		return nil
+	}
+    
+	func read(_ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo, _ forceBiometricAuthentication: Bool) {
+		guard let currentQuery = baseQuery(result) else {
+			return;
+		}
+		if let currentResult = readQuery(currentQuery, result, promptInfo, forceBiometricAuthentication) {
+			if let value = currentResult {
+				result(value)
+				return
+			}
+		} else {
+			return
+		}
+		guard let legacyQuery = baseQuery(result, service: legacyKeychainService) else {
+			return
+		}
+		if let legacyResult = readQuery(legacyQuery, result, promptInfo, forceBiometricAuthentication) {
+			result(legacyResult)
+		}
+	}
+    
+	func delete(_ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo) {
+		guard let currentQuery = baseQuery(result) else {
+			return;
+		}
+		guard let deletedCurrent = deleteQuery(currentQuery, result) else {
+			return
+		}
+		if deletedCurrent {
+			result(true)
+			return
+		}
+		guard let legacyQuery = baseQuery(result, service: legacyKeychainService) else {
+			return
+		}
+		guard let deletedLegacy = deleteQuery(legacyQuery, result) else {
+			return
+		}
+		if deletedLegacy || !deletedCurrent {
+			result(true)
+			return
+		}
+	}
+
+	func exists(_ result: @escaping StorageCallback) {
+		guard let currentQuery = baseQuery(result) else {
+			return
+		}
+		if let currentExists = existsQuery(currentQuery, result) {
+			if currentExists {
+				result(true)
+				return
+			}
+		} else {
+			return
+		}
+		guard let legacyQuery = baseQuery(result, service: legacyKeychainService) else {
+			return
+		}
+		if let legacyExists = existsQuery(legacyQuery, result) {
+			result(legacyExists)
 		}
 	}
     
@@ -352,15 +398,12 @@ class BiometricStorageFile {
 			if let operationPrompt = promptInfo.saveTitle {
 				query[kSecUseOperationPrompt as String] = operationPrompt
 			}
-		} else {
-			hpdebug("No authentication required for \(name)")
 		}
 		query.merge([
 			kSecValueData as String: content.data(using: String.Encoding.utf8) as Any,
 		]) { (_, new) in new }
 		var status = SecItemAdd(query as CFDictionary, nil)
 		if (status == errSecDuplicateItem) {
-			hpdebug("Value already exists. updating.")
 			let update = [kSecValueData as String: query[kSecValueData as String]]
 			query.removeValue(forKey: kSecValueData as String)
 			status = SecItemUpdate(query as CFDictionary, update as CFDictionary)

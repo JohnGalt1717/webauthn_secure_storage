@@ -1,2 +1,0 @@
--keep class androidx.security.crypto.MasterKeys { *; }
--keep class androidx.security.crypto.EncryptedFile$FileEncryptionScheme { *; }
