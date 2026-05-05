@@ -11,14 +11,14 @@ G_BEGIN_DECLS
 #define FLUTTER_PLUGIN_EXPORT
 #endif
 
-typedef struct _BiometricStoragePlugin BiometricStoragePlugin;
+typedef struct _WebauthnSecureStoragePlugin WebauthnSecureStoragePlugin;
 typedef struct {
   GObjectClass parent_class;
-} BiometricStoragePluginClass;
+} WebauthnSecureStoragePluginClass;
 
 FLUTTER_PLUGIN_EXPORT GType webauthn_secure_storage_plugin_get_type();
 
-FLUTTER_PLUGIN_EXPORT void webauthn_secure_storage_linux_plugin_register_with_registrar(
+FLUTTER_PLUGIN_EXPORT void webauthn_secure_storage_plugin_register_with_registrar(
     FlPluginRegistrar* registrar);
 
 G_END_DECLS

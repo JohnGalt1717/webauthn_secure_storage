@@ -25,5 +25,5 @@ flutter:
     implements: webauthn_secure_storage
     platforms:
       linux:
-        pluginClass: BiometricStoragePlugin
-        dartPluginClass: BiometricStorageLinux
+        pluginClass: WebauthnSecureStoragePlugin
+        dartPluginClass: WebauthnSecureStorageLinux

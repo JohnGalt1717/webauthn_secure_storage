@@ -26,16 +26,16 @@ typedef enum {
 
 #define WEBAUTHN_SECURE_STORAGE_PLUGIN(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), webauthn_secure_storage_plugin_get_type(), \
-                              BiometricStoragePlugin))
+                              WebauthnSecureStoragePlugin))
 
 #define IS_METHOD(name, equals) \
   strcmp(method, equals) == 0
 
-struct _BiometricStoragePlugin {
+struct _WebauthnSecureStoragePlugin {
   GObject parent_instance;
 };
 
-G_DEFINE_TYPE(BiometricStoragePlugin, webauthn_secure_storage_plugin, g_object_get_type())
+G_DEFINE_TYPE(WebauthnSecureStoragePlugin, webauthn_secure_storage_plugin, g_object_get_type())
 
 typedef struct {
   FlMethodCall *method_call;
@@ -223,7 +223,7 @@ static void on_password_exists(GObject *source, GAsyncResult *result, gpointer u
   secret_lookup_context_free(context);
 }
 
-static void webauthn_secure_storage_plugin_handle_method_call(BiometricStoragePlugin *self, FlMethodCall *method_call) {
+static void webauthn_secure_storage_plugin_handle_method_call(WebauthnSecureStoragePlugin *self, FlMethodCall *method_call) {
   g_autoptr(FlMethodResponse) response = nullptr;
 
   const gchar *method = fl_method_call_get_name(method_call);
@@ -274,19 +274,19 @@ static void webauthn_secure_storage_plugin_dispose(GObject* object) {
   G_OBJECT_CLASS(webauthn_secure_storage_plugin_parent_class)->dispose(object);
 }
 
-static void webauthn_secure_storage_plugin_class_init(BiometricStoragePluginClass* klass) {
+static void webauthn_secure_storage_plugin_class_init(WebauthnSecureStoragePluginClass* klass) {
   G_OBJECT_CLASS(klass)->dispose = webauthn_secure_storage_plugin_dispose;
 }
 
-static void webauthn_secure_storage_plugin_init(BiometricStoragePlugin* self) {}
+static void webauthn_secure_storage_plugin_init(WebauthnSecureStoragePlugin* self) {}
 
 static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call, gpointer user_data) {
-  BiometricStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(user_data);
+  WebauthnSecureStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(user_data);
   webauthn_secure_storage_plugin_handle_method_call(plugin, method_call);
 }
 
-void webauthn_secure_storage_linux_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  BiometricStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(
+void webauthn_secure_storage_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
+  WebauthnSecureStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(
       g_object_new(webauthn_secure_storage_plugin_get_type(), nullptr));
 
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
