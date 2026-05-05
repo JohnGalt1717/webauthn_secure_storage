@@ -153,21 +153,36 @@ class BiometricStorageImpl {
 			return
 		}
 		let laError = LAError(_nsError: err)
-		NSLog("LAError: \(laError)");
 		switch laError.code {
-		case .touchIDNotAvailable:
+		case .biometryNotAvailable:
 			result("ErrorHwUnavailable")
 			break;
 		case .passcodeNotSet:
 			result("ErrorPasscodeNotSet")
 			break;
-		case .touchIDNotEnrolled:
+		case .biometryNotEnrolled:
 			result("ErrorNoBiometricEnrolled")
+			break;
+		case .systemCancel where isHardwareUnavailableError(err):
+			result("ErrorHwUnavailable")
 			break;
 		case .invalidContext: fallthrough
 		default:
 			result("ErrorUnknown")
 			break;
+		}
+	}
+
+	private func isHardwareUnavailableError(_ error: NSError) -> Bool {
+		let errorText = [
+			error.localizedDescription,
+			error.userInfo[NSDebugDescriptionErrorKey] as? String,
+			error.userInfo[NSLocalizedFailureReasonErrorKey] as? String,
+		]
+			.compactMap { $0?.lowercased() }
+
+		return errorText.contains {
+			($0.contains("touch id") || $0.contains("biometry")) && $0.contains("not available")
 		}
 	}
 }
@@ -257,16 +272,31 @@ class BiometricStorageFile {
 		return access
 	}
 
+	private func authenticationContext(localizedReason: String? = nil) -> LAContext {
+		let context = self.context
+		if let localizedReason {
+			context.localizedReason = localizedReason
+		}
+		return context
+	}
+
+	private func nonInteractiveAuthenticationContext() -> LAContext {
+		let context = LAContext()
+		context.interactionNotAllowed = true
+		return context
+	}
+
 	private func readQuery(_ query: [String: Any], _ result: @escaping StorageCallback, _ promptInfo: IOSPromptInfo, _ forceBiometricAuthentication: Bool) -> String?? {
 		var query = query
 		if(forceBiometricAuthentication){
 			_context = nil
 		}
 		query[kSecMatchLimit as String] = kSecMatchLimitOne
-		query[kSecUseOperationPrompt as String] = promptInfo.accessTitle
 		query[kSecReturnAttributes as String] = true
 		query[kSecReturnData as String] = true
-		query[kSecUseAuthenticationContext as String] = context
+		query[kSecUseAuthenticationContext as String] = authenticationContext(
+			localizedReason: promptInfo.accessTitle,
+		)
 
 		var item: CFTypeRef?
 		let status = SecItemCopyMatching(query as CFDictionary, &item)
@@ -291,8 +321,9 @@ class BiometricStorageFile {
 		var query = query
 		query[kSecMatchLimit as String] = kSecMatchLimitOne
 		query[kSecReturnAttributes as String] = false
-		if #available(iOS 9.0, macOS 10.11, *) {
-			query[kSecUseAuthenticationUI as String] = kSecUseAuthenticationUIFail
+		if initOptions.authenticationRequired {
+			query[kSecUseAuthenticationContext as String] =
+				nonInteractiveAuthenticationContext()
 		}
 
 		let status = SecItemCopyMatching(query as CFDictionary, nil)
@@ -393,11 +424,10 @@ class BiometricStorageFile {
 		
 		if (initOptions.authenticationRequired) {
 			query.merge([
-				kSecUseAuthenticationContext as String: context,
+				kSecUseAuthenticationContext as String: authenticationContext(
+					localizedReason: promptInfo.saveTitle,
+				),
 			]) { (_, new) in new }
-			if let operationPrompt = promptInfo.saveTitle {
-				query[kSecUseOperationPrompt as String] = operationPrompt
-			}
 		}
 		query.merge([
 			kSecValueData as String: content.data(using: String.Encoding.utf8) as Any,

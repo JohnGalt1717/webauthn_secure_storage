@@ -8,6 +8,15 @@
 - Reset the fork changelog so future changes are tracked independently.
 - Clean generated artifacts from the repository and refresh ignore rules for a
   cleaner Flutter package workspace.
+- Clarify the recommended app integration workflow in the package README,
+  including the distinction between platform support and biometric
+  availability-at-runtime.
+- Document platform-specific project setup requirements for Android, iOS,
+  macOS, Linux, Windows, and web consumers.
+- Improve Darwin biometric availability handling for macOS closed-clamshell and
+  similar temporarily-unavailable authenticator states.
+- Replace deprecated macOS Keychain prompt/UI query usage with modern
+  `LAContext`-based configuration.
 
 ### Data-migration note for Linux users
 
