@@ -8,6 +8,8 @@ import 'package:webauthn_secure_storage_platform_interface/webauthn_secure_stora
 import 'package:ffi/ffi.dart';
 import 'package:logging/logging.dart';
 
+import 'src/passkey_windows.dart';
+
 final _logger = Logger('webauthn_secure_storage_windows');
 
 const _credTypeGeneric = 1;
@@ -94,6 +96,16 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   static void registerWith() {
     BiometricStoragePlatform.instance = BiometricStorageWindows();
   }
+
+  @override
+  Future<PublicKeyCredentialAttestationJson> registerPasskey(
+          PublicKeyCredentialCreationOptionsJson options) async =>
+      PasskeyWindows.registerPasskey(options);
+
+  @override
+  Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
+          PublicKeyCredentialRequestOptionsJson options) async =>
+      PasskeyWindows.authenticateWithPasskey(options);
 
   String _storageName(String name, {bool legacy = false}) =>
       '${legacy ? legacyNamePrefix : namePrefix}$name';

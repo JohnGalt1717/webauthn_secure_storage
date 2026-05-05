@@ -24,6 +24,18 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
       <String, dynamic>{};
 
   @override
+  Future<PublicKeyCredentialAttestationJson> registerPasskey(
+      PublicKeyCredentialCreationOptionsJson options) async {
+    throw UnimplementedError('Linux Passkeys via libfido2 not fully mocked yet in tests');
+  }
+
+  @override
+  Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
+      PublicKeyCredentialRequestOptionsJson options) async {
+    throw UnimplementedError('Linux Passkeys via libfido2 not fully mocked yet in tests');
+  }
+
+  @override
   Future<bool> linuxCheckAppArmorError() async {
     await init(
       'appArmorCheck',
