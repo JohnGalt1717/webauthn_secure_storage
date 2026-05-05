@@ -40,7 +40,7 @@ jobs:
         run: flutter pub get
 
       - name: Analyze package
-        run: flutter analyze lib test
+        run: flutter analyze
 
   test:
     name: Test ${{ matrix.package }}
@@ -73,7 +73,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests
-        run: flutter test
+        run: if [ -d "test" ]; then flutter test; else echo "No tests to run for ${{ matrix.package }}."; fi
 
   test-web:
     name: Test webauthn_secure_storage_web
