@@ -4,6 +4,8 @@ version: 0.1.0
 homepage: https://github.com/JohnGalt1717/webauthn_secure_storage
 publish_to: 'none'
 
+resolution: workspace
+
 environment:
   sdk: '>=3.11.0 <4.0.0'
   flutter: ">=3.41.0"
@@ -13,8 +15,7 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  webauthn_secure_storage_platform_interface:
-    path: ../webauthn_secure_storage_platform_interface
+  webauthn_secure_storage_platform_interface: ^0.1.0
   web: ">=0.5.0 <2.0.0"
 
 dev_dependencies:

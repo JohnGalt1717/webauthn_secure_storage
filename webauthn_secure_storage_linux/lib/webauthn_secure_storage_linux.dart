@@ -1,8 +1,8 @@
 import 'package:webauthn_secure_storage_platform_interface/webauthn_secure_storage_platform_interface.dart';
 
-class BiometricStorageLinux extends MethodChannelBiometricStoragePlatform {
+class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
   static void registerWith() {
-    BiometricStoragePlatform.instance = BiometricStorageLinux();
+    BiometricStoragePlatform.instance = WebauthnSecureStorageLinux();
   }
 
   @override

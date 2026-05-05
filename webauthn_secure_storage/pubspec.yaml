@@ -4,6 +4,8 @@ version: 0.1.0
 homepage: https://github.com/JohnGalt1717/webauthn_secure_storage
 publish_to: 'none'
 
+resolution: workspace
+
 environment:
   sdk: '>=3.11.0 <4.0.0'
   flutter: ">=3.41.0"
@@ -11,18 +13,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  webauthn_secure_storage_android:
-    path: ../webauthn_secure_storage_android
-  webauthn_secure_storage_darwin:
-    path: ../webauthn_secure_storage_darwin
-  webauthn_secure_storage_linux:
-    path: ../webauthn_secure_storage_linux
-  webauthn_secure_storage_platform_interface:
-    path: ../webauthn_secure_storage_platform_interface
-  webauthn_secure_storage_web:
-    path: ../webauthn_secure_storage_web
-  webauthn_secure_storage_windows:
-    path: ../webauthn_secure_storage_windows
+  webauthn_secure_storage_android: ^0.1.0
+  webauthn_secure_storage_darwin: ^0.1.0
+  webauthn_secure_storage_linux: ^0.1.0
+  webauthn_secure_storage_platform_interface: ^0.1.0
+  webauthn_secure_storage_web: ^0.1.0
+  webauthn_secure_storage_windows: ^0.1.0
 
 dev_dependencies:
   flutter_test:
