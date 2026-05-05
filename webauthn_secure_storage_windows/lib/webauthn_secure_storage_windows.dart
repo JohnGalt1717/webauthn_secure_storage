@@ -19,36 +19,37 @@ const _errorNotFound = 1168;
 final DynamicLibrary _advapi32 = DynamicLibrary.open('Advapi32.dll');
 final DynamicLibrary _kernel32 = DynamicLibrary.open('Kernel32.dll');
 
-final int Function(Pointer<Utf16>, int, int) _credDelete =
-    _advapi32.lookupFunction<Int32 Function(Pointer<Utf16>, Uint32, Uint32),
-        int Function(Pointer<Utf16>, int, int)>('CredDeleteW');
+final int Function(Pointer<Utf16>, int, int) _credDelete = _advapi32
+    .lookupFunction<
+      Int32 Function(Pointer<Utf16>, Uint32, Uint32),
+      int Function(Pointer<Utf16>, int, int)
+    >('CredDeleteW');
 
 final int Function(Pointer<Utf16>, int, int, Pointer<Pointer<_Credential>>)
-    _credRead = _advapi32.lookupFunction<
-        Int32 Function(
-          Pointer<Utf16>,
-          Uint32,
-          Uint32,
-          Pointer<Pointer<_Credential>>,
-        ),
-        int Function(
-          Pointer<Utf16>,
-          int,
-          int,
-          Pointer<Pointer<_Credential>>,
-        )>('CredReadW');
+_credRead = _advapi32
+    .lookupFunction<
+      Int32 Function(
+        Pointer<Utf16>,
+        Uint32,
+        Uint32,
+        Pointer<Pointer<_Credential>>,
+      ),
+      int Function(Pointer<Utf16>, int, int, Pointer<Pointer<_Credential>>)
+    >('CredReadW');
 
-final int Function(Pointer<_Credential>, int) _credWrite =
-    _advapi32.lookupFunction<Int32 Function(Pointer<_Credential>, Uint32),
-        int Function(Pointer<_Credential>, int)>('CredWriteW');
+final int Function(Pointer<_Credential>, int) _credWrite = _advapi32
+    .lookupFunction<
+      Int32 Function(Pointer<_Credential>, Uint32),
+      int Function(Pointer<_Credential>, int)
+    >('CredWriteW');
 
 final void Function(Pointer<Void>) _credFree = _advapi32
     .lookupFunction<Void Function(Pointer<Void>), void Function(Pointer<Void>)>(
-  'CredFree',
-);
+      'CredFree',
+    );
 
-final int Function() _getLastError =
-    _kernel32.lookupFunction<Uint32 Function(), int Function()>('GetLastError');
+final int Function() _getLastError = _kernel32
+    .lookupFunction<Uint32 Function(), int Function()>('GetLastError');
 
 final class _FileTime extends Struct {
   @Uint32()
@@ -99,19 +100,21 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
 
   @override
   Future<PublicKeyCredentialAttestationJson> registerPasskey(
-          PublicKeyCredentialCreationOptionsJson options) async =>
-      PasskeyWindows.registerPasskey(options);
+    PublicKeyCredentialCreationOptionsJson options,
+  ) async => PasskeyWindows.registerPasskey(options);
 
   @override
   Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
-          PublicKeyCredentialRequestOptionsJson options) async =>
-      PasskeyWindows.authenticateWithPasskey(options);
+    PublicKeyCredentialRequestOptionsJson options,
+  ) async => PasskeyWindows.authenticateWithPasskey(options);
 
   String _storageName(String name, {bool legacy = false}) =>
       '${legacy ? legacyNamePrefix : namePrefix}$name';
 
   Future<bool> _deleteByStorageName(
-      String storageName, String logicalName) async {
+    String storageName,
+    String logicalName,
+  ) async {
     final namePointer = storageName.toNativeUtf16(allocator: calloc);
     try {
       final result = _credDelete(namePointer, _credTypeGeneric, 0);
@@ -131,7 +134,9 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   }
 
   Future<String?> _readByStorageName(
-      String storageName, String logicalName) async {
+    String storageName,
+    String logicalName,
+  ) async {
     final credPointer = calloc<Pointer<_Credential>>();
     final namePointer = storageName.toNativeUtf16(allocator: calloc);
     try {
@@ -166,25 +171,20 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   @override
   Future<CanAuthenticateResponse> canAuthenticate({
     StorageFileInitOptions? options,
-  }) async =>
-      CanAuthenticateResponse.errorHwUnavailable;
+  }) async => CanAuthenticateResponse.errorHwUnavailable;
 
   @override
   Future<bool?> init(
     String name, {
     StorageFileInitOptions? options,
     bool forceInit = false,
-  }) async =>
-      true;
+  }) async => true;
 
   @override
   Future<bool> linuxCheckAppArmorError() async => false;
 
   @override
-  Future<bool?> delete(
-    String name,
-    PromptInfo promptInfo,
-  ) async =>
+  Future<bool?> delete(String name, PromptInfo promptInfo) async =>
       await _deleteByStorageName(_storageName(name), name) ||
       await _deleteByStorageName(_storageName(name, legacy: true), name);
 
@@ -202,10 +202,7 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   }
 
   @override
-  Future<bool> exists(
-    String name,
-    PromptInfo promptInfo,
-  ) async =>
+  Future<bool> exists(String name, PromptInfo promptInfo) async =>
       await read(name, promptInfo) != null;
 
   @override
@@ -216,8 +213,9 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
     bool forceBiometricAuthentication = false,
   }) async {
     final passwordBytes = Uint8List.fromList(utf8.encode(content));
-    final blob =
-        passwordBytes.isEmpty ? nullptr : calloc<Uint8>(passwordBytes.length);
+    final blob = passwordBytes.isEmpty
+        ? nullptr
+        : calloc<Uint8>(passwordBytes.length);
     if (blob != nullptr) {
       blob.asTypedList(passwordBytes.length).setAll(0, passwordBytes);
     }

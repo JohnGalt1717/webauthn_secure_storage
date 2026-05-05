@@ -10,12 +10,9 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
     StorageFileInitOptions? options,
   }) async {
     final response = await MethodChannelBiometricStoragePlatform.channel
-        .invokeMethod<String>(
-      'canAuthenticate',
-      <String, dynamic>{
-        'options': options?.toJson() ?? StorageFileInitOptions().toJson(),
-      },
-    );
+        .invokeMethod<String>('canAuthenticate', <String, dynamic>{
+          'options': options?.toJson() ?? StorageFileInitOptions().toJson(),
+        });
     return mapCanAuthenticateResponse(response);
   }
 
@@ -25,14 +22,20 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
 
   @override
   Future<PublicKeyCredentialAttestationJson> registerPasskey(
-      PublicKeyCredentialCreationOptionsJson options) async {
-    throw UnimplementedError('Linux Passkeys via libfido2 not fully mocked yet in tests');
+    PublicKeyCredentialCreationOptionsJson options,
+  ) async {
+    throw UnimplementedError(
+      'Linux Passkeys via libfido2 not fully mocked yet in tests',
+    );
   }
 
   @override
   Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
-      PublicKeyCredentialRequestOptionsJson options) async {
-    throw UnimplementedError('Linux Passkeys via libfido2 not fully mocked yet in tests');
+    PublicKeyCredentialRequestOptionsJson options,
+  ) async {
+    throw UnimplementedError(
+      'Linux Passkeys via libfido2 not fully mocked yet in tests',
+    );
   }
 
   @override
