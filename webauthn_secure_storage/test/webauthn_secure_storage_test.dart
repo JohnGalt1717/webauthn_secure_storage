@@ -67,6 +67,26 @@ void main() {
     expect(await BiometricStorage().linuxCheckAppArmorError(), isTrue);
   });
 
+  test('treats hardware unavailable as unavailable right now', () async {
+    platform.canAuthenticateResponse =
+        CanAuthenticateResponse.errorHwUnavailable;
+
+    expect(
+      await BiometricStorage().canAuthenticate(),
+      CanAuthenticateResponse.errorHwUnavailable,
+    );
+    expect(await BiometricStorage().canAuthenticateWithBiometrics(), isFalse);
+
+    final capabilities = await BiometricStorage().getCapabilities();
+    expect(capabilities.isBiometricStorageSupported, isTrue);
+    expect(capabilities.isBiometricStorageAvailable, isFalse);
+    expect(capabilities.biometricStorage.shouldFallbackToRegularLogin, isTrue);
+    expect(capabilities.supportedCapabilities.toSet(), <SecureAccessCapability>{
+      SecureAccessCapability.biometricStorage,
+    });
+    expect(capabilities.availableCapabilities.toSet(), isEmpty);
+  });
+
   test('exposes support helpers for login fallback flows', () async {
     platform.canAuthenticateResponse = CanAuthenticateResponse.success;
     platform.passkeyAvailabilityResponse = const PasskeyAvailability(
