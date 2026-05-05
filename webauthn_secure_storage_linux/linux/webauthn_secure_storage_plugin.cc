@@ -285,10 +285,6 @@ static void method_call_cb(FlMethodChannel* channel, FlMethodCall* method_call, 
   webauthn_secure_storage_plugin_handle_method_call(plugin, method_call);
 }
 
-void biometric_storage_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
-  webauthn_secure_storage_linux_plugin_register_with_registrar(registrar);
-}
-
 void webauthn_secure_storage_linux_plugin_register_with_registrar(FlPluginRegistrar* registrar) {
   BiometricStoragePlugin* plugin = WEBAUTHN_SECURE_STORAGE_PLUGIN(
       g_object_new(webauthn_secure_storage_plugin_get_type(), nullptr));

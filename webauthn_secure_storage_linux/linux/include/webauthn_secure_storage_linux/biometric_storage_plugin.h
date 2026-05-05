@@ -1,6 +1,0 @@
-#ifndef FLUTTER_PLUGIN_BIOMETRIC_STORAGE_PLUGIN_COMPAT_H_
-#define FLUTTER_PLUGIN_BIOMETRIC_STORAGE_PLUGIN_COMPAT_H_
-
-#include "webauthn_secure_storage_plugin.h"
-
-#endif
