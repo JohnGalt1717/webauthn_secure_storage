@@ -4,6 +4,12 @@
 
 #include "webauthn_secure_storage_windows_plugin.h"
 
+void WebauthnSecureStorageWindowsPluginRegisterWithRegistrar(
+        flutter::PluginRegistrarWindows* registrar) {
+    webauthn_secure_storage_windows::WebauthnSecureStorageWindowsPlugin::RegisterWithRegistrar(
+            registrar);
+}
+
 void WebauthnSecureStorageWindowsPluginCApiRegisterWithRegistrar(
     FlutterDesktopPluginRegistrarRef registrar) {
   webauthn_secure_storage_windows::WebauthnSecureStorageWindowsPlugin::RegisterWithRegistrar(
