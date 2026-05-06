@@ -6,6 +6,7 @@
 A robust Flutter plugin providing cross-platform encrypted secure storage and standards-based WebAuthn/Passkey capabilities.
 
 This package combines two essential security concepts into one seamless API:
+
 1. **Biometric-gated secure storage**: Securely store small secrets (like authentication tokens or encryption keys) backed by hardware encryption and gated by platform biometrics (Face ID, Touch ID, Android Keystore).
 2. **Passkeys / WebAuthn**: Full support for server-driven Passkey registration and authentication flows, matching W3C standards using native platform APIs.
 
@@ -54,7 +55,8 @@ class MainActivity: FlutterFragmentActivity() {
 }
 ```
 
-3. Use an AppCompat-based launch theme. In `android/app/src/main/res/values/styles.xml`:
+1. Use an AppCompat-based launch theme. In `android/app/src/main/res/values/styles.xml`:
+
 ```xml
 <style name="LaunchTheme" parent="Theme.AppCompat.NoActionBar">
     <!-- your theme config -->
@@ -70,7 +72,7 @@ class MainActivity: FlutterFragmentActivity() {
 <string>Use Face ID / Touch ID to securely authenticate and access secrets.</string>
 ```
 
-2. For **macOS Sandboxed apps**, ensure you add the Keychain access group to your `.entitlements` files (both Debug and Release):
+1. For **macOS Sandboxed apps**, ensure you add the Keychain access group to your `.entitlements` files (both Debug and Release):
 
 ```xml
 <key>com.apple.security.app-sandbox</key>
@@ -81,7 +83,8 @@ class MainActivity: FlutterFragmentActivity() {
 </array>
 ```
 
-3. For Passkeys support on Apple platforms, you must configure **Associated Domains**. Add the following to your entitlements and configure your `apple-app-site-association` file on your server.
+1. For Passkeys support on Apple platforms, you must configure **Associated Domains**. Add the following to your entitlements and configure your `apple-app-site-association` file on your server.
+
 ```xml
 <key>com.apple.developer.associated-domains</key>
 <array>
@@ -97,6 +100,7 @@ class MainActivity: FlutterFragmentActivity() {
 ### Web
 
 To use Passkeys and PRF-backed storage on the web, you must:
+
 1. Serve your application from a secure context (`https://` or `localhost`).
 2. Ensure your WebAuthn relying-party configuration matches your deployment origin.
 
@@ -205,7 +209,9 @@ final assertion = await biometricStorage.authenticateWithPasskey(requestOptions)
 ```
 
 ## Contributing
+
 See the repository for full contribution guidelines, federated architecture details, and issue tracking.
 
 ## Acknowledgements
+
 Thank you to the original `biometric_storage` package for the initial inspiration and many of the code concepts.
