@@ -1,7 +1,6 @@
 package design.codeux.webauthn_secure_storage
 
 import android.app.Activity
-import android.content.Context
 import androidx.credentials.CreatePublicKeyCredentialRequest
 import androidx.credentials.CreatePublicKeyCredentialResponse
 import androidx.credentials.CredentialManager

@@ -4,11 +4,11 @@ class PasskeyWindows {
   static Future<PublicKeyCredentialAttestationJson> registerPasskey(
       PublicKeyCredentialCreationOptionsJson options) async {
     // Basic stub bridging to ensure interface compatibility
-    throw UnimplementedError('Windows Passkeys WebAuthN API not fully mocked yet in tests');
+    throw UnimplementedError('Windows passkey support via WebAuthN API is not yet implemented.');
   }
 
   static Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
       PublicKeyCredentialRequestOptionsJson options) async {
-    throw UnimplementedError('Windows Passkeys WebAuthN API not fully mocked yet in tests');
+    throw UnimplementedError('Windows passkey support via WebAuthN API is not yet implemented.');
   }
 }
