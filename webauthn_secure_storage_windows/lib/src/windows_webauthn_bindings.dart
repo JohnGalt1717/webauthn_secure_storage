@@ -1032,7 +1032,7 @@ Pointer<_WebAuthNCredentialList>? _buildCredentialList({
       ..pbId = idPointer
       ..pwszCredentialType = credentialTypePointer
       ..dwTransports = _transportMaskFromStrings(descriptor.transports);
-    credentialPointers[index] = credentialsPointer.elementAt(index);
+    credentialPointers[index] = credentialsPointer + index;
   }
 
   final listPointer = arena<_WebAuthNCredentialList>()
