@@ -194,6 +194,34 @@ void main() {
         expect(assertion.response.signature, 'signature');
       },
     );
+
+    test(
+      'authenticateWithPasskey maps native not allowed errors to auth exceptions',
+      () async {
+        PasskeyWindows.bindingsFactory = () => _ThrowingWindowsBindings(
+          apiVersion: 1,
+          availability: const WindowsPlatformAuthenticatorAvailability(
+            hResult: 0,
+            isAvailable: true,
+          ),
+          error: const WindowsWebAuthnException(
+            hResult: -1,
+            errorName: 'NotAllowedError',
+            message: 'user cancelled',
+          ),
+        );
+
+        final options = PublicKeyCredentialRequestOptionsJson(
+          challenge: 'challenge',
+          rpId: 'rp.example',
+        );
+
+        await expectLater(
+          plugin.authenticateWithPasskey(options),
+          throwsA(isA<AuthException>()),
+        );
+      },
+    );
   });
 }
 
@@ -209,6 +237,13 @@ class _ThrowingWindowsBindings extends _FakeWindowsWebAuthnBindings {
   @override
   PublicKeyCredentialAttestationJson registerPasskey(
     PublicKeyCredentialCreationOptionsJson options,
+  ) {
+    throw error;
+  }
+
+  @override
+  PublicKeyCredentialAssertionJson authenticateWithPasskey(
+    PublicKeyCredentialRequestOptionsJson options,
   ) {
     throw error;
   }

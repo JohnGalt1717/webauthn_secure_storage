@@ -74,7 +74,7 @@ class PasskeyWindows {
     try {
       return bindings.registerPasskey(options);
     } on WindowsWebAuthnException catch (error) {
-      _throwMappedException(error);
+      return _throwMappedException(error);
     }
   }
 
@@ -89,7 +89,7 @@ class PasskeyWindows {
     try {
       return bindings.authenticateWithPasskey(options);
     } on WindowsWebAuthnException catch (error) {
-      _throwMappedException(error);
+      return _throwMappedException(error);
     }
   }
 
