@@ -5,6 +5,10 @@ import AuthenticationServices
 public class BiometricStoragePlugin: NSObject, FlutterPlugin {
 
     private var passkeyImpl: Any? // Store reference to prevent deallocation
+    
+    private let impl = BiometricStorageImpl(storageError: { (code, message, details) -> Any in
+      FlutterError(code: code, message: message, details: details)
+    }, storageMethodNotImplemented: FlutterMethodNotImplemented)
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "webauthn_secure_storage", binaryMessenger: registrar.messenger())
@@ -14,27 +18,26 @@ public class BiometricStoragePlugin: NSObject, FlutterPlugin {
 
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         if #available(iOS 16.0, *) {
-            let impl = passkeyImpl as? PasskeyImplementation ?? PasskeyImplementation()
-            passkeyImpl = impl
-
+            let passImpl = passkeyImpl as? PasskeyImplementation ?? PasskeyImplementation()
+            passkeyImpl = passImpl
+            
             if call.method == "registerPasskey" {
                 if let args = call.arguments as? [String: Any], let options = args["options"] as? [String: Any] {
-                    impl.registerPasskey(options: options, result: result)
+                    passImpl.registerPasskey(options: options, result: result)
                 } else {
                     result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: nil))
                 }
                 return
             } else if call.method == "authenticateWithPasskey" {
                 if let args = call.arguments as? [String: Any], let options = args["options"] as? [String: Any] {
-                    impl.authenticateWithPasskey(options: options, result: result)
+                    passImpl.authenticateWithPasskey(options: options, result: result)
                 } else {
                     result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: nil))
                 }
                 return
             }
         }
-
-        let target = BiometricStorageImpl(result: result)
-        BiometricStorageImpl.handleMethodCall(call, target: target)
+        
+        impl.handle(StorageMethodCall(method: call.method, arguments: call.arguments), result: result)
     }
 }

@@ -11,7 +11,7 @@ void main() {
     });
 
     test(
-      'registerPasskey throws UnimplementedError until completely supported',
+      'registerPasskey throws UnsupportedError until completely supported',
       () async {
         final options = PublicKeyCredentialCreationOptionsJson(
           challenge: 'challenge',
@@ -24,23 +24,23 @@ void main() {
           pubKeyCredParams: [],
         );
 
-        expect(
-          () => plugin.registerPasskey(options),
-          throwsA(isA<UnimplementedError>()),
+        await expectLater(
+          plugin.registerPasskey(options),
+          throwsA(isA<UnsupportedError>()),
         );
       },
     );
 
     test(
-      'authenticateWithPasskey throws UnimplementedError until completely supported',
+      'authenticateWithPasskey throws UnsupportedError until completely supported',
       () async {
         final options = PublicKeyCredentialRequestOptionsJson(
           challenge: 'challenge',
         );
 
-        expect(
-          () => plugin.authenticateWithPasskey(options),
-          throwsA(isA<UnimplementedError>()),
+        await expectLater(
+          plugin.authenticateWithPasskey(options),
+          throwsA(isA<UnsupportedError>()),
         );
       },
     );
