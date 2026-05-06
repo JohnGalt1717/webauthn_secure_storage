@@ -10,18 +10,33 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
     StorageFileInitOptions? options,
   }) async {
     final response = await MethodChannelBiometricStoragePlatform.channel
-        .invokeMethod<String>(
-      'canAuthenticate',
-      <String, dynamic>{
-        'options': options?.toJson() ?? StorageFileInitOptions().toJson(),
-      },
-    );
+        .invokeMethod<String>('canAuthenticate', <String, dynamic>{
+          'options': options?.toJson() ?? StorageFileInitOptions().toJson(),
+        });
     return mapCanAuthenticateResponse(response);
   }
 
   @override
   Map<String, dynamic> buildPromptInfoArguments(PromptInfo promptInfo) =>
       <String, dynamic>{};
+
+  @override
+  Future<PublicKeyCredentialAttestationJson> registerPasskey(
+    PublicKeyCredentialCreationOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'Passkeys are not supported on Linux yet.',
+    );
+  }
+
+  @override
+  Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
+    PublicKeyCredentialRequestOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'Passkeys are not supported on Linux yet.',
+    );
+  }
 
   @override
   Future<bool> linuxCheckAppArmorError() async {

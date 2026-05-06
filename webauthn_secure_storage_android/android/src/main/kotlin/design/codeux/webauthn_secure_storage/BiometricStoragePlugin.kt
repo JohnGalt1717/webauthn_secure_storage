@@ -244,6 +244,34 @@ class BiometricStoragePlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                             ?: InitOptions()
 
             when (call.method) {
+                "registerPasskey" -> {
+                    attachedActivity?.let { activity ->
+                        val optionsMap = requiredArgument<Map<String, Any>>("options")
+                        registerPasskey(
+                                activity,
+                                optionsMap,
+                                onSuccess = { resultMap -> result.success(resultMap) },
+                                onError = { e -> result.error("PasskeyError", e.message, null) }
+                        )
+                    }
+                            ?: run {
+                                result.error("ActivityMissing", "Activity is not attached", null)
+                            }
+                }
+                "authenticateWithPasskey" -> {
+                    attachedActivity?.let { activity ->
+                        val optionsMap = requiredArgument<Map<String, Any>>("options")
+                        authenticateWithPasskey(
+                                activity,
+                                optionsMap,
+                                onSuccess = { resultMap -> result.success(resultMap) },
+                                onError = { e -> result.error("PasskeyError", e.message, null) }
+                        )
+                    }
+                            ?: run {
+                                result.error("ActivityMissing", "Activity is not attached", null)
+                            }
+                }
                 "canAuthenticate" -> result.success(canAuthenticate(parseInitOptions()).name)
                 "init" -> {
                     val name = getName()
