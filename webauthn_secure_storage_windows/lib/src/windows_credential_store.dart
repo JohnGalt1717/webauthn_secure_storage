@@ -57,9 +57,8 @@ class CredentialManagerWindowsCredentialStore
             Void Function(Pointer<Void>),
             void Function(Pointer<Void>)
           >('CredFree'),
-      _getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>(
-        'GetLastError',
-      );
+      _getLastError = _kernel32
+          .lookupFunction<Uint32 Function(), int Function()>('GetLastError');
 
   final int Function(Pointer<Utf16>, int, int) _credDelete;
   final int Function(Pointer<Utf16>, int, int, Pointer<Pointer<_Credential>>)

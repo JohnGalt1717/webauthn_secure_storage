@@ -271,30 +271,32 @@ void main() {
       expect(userConsentClient.verificationReasons, isEmpty);
     });
 
-    test('forceBiometricAuthentication prompts even without enforced auth',
-        () async {
-      await plugin.init(
-        'secret',
-        options: StorageFileInitOptions(authenticationRequired: false),
-      );
+    test(
+      'forceBiometricAuthentication prompts even without enforced auth',
+      () async {
+        await plugin.init(
+          'secret',
+          options: StorageFileInitOptions(authenticationRequired: false),
+        );
 
-      await plugin.write(
-        'secret',
-        'value',
-        PromptInfo.defaultValues,
-        forceBiometricAuthentication: true,
-      );
-      await plugin.read(
-        'secret',
-        PromptInfo.defaultValues,
-        forceBiometricAuthentication: true,
-      );
+        await plugin.write(
+          'secret',
+          'value',
+          PromptInfo.defaultValues,
+          forceBiometricAuthentication: true,
+        );
+        await plugin.read(
+          'secret',
+          PromptInfo.defaultValues,
+          forceBiometricAuthentication: true,
+        );
 
-      expect(userConsentClient.verificationReasons, <String>[
-        'Use Windows Hello to save protected data.',
-        'Use Windows Hello to access protected data.',
-      ]);
-    });
+        expect(userConsentClient.verificationReasons, <String>[
+          'Use Windows Hello to save protected data.',
+          'Use Windows Hello to access protected data.',
+        ]);
+      },
+    );
 
     test('canceled verification maps to an auth exception', () async {
       await plugin.init(

@@ -50,7 +50,8 @@ abstract interface class WindowsUserConsentClient {
   });
 }
 
-class MethodChannelWindowsUserConsentClient implements WindowsUserConsentClient {
+class MethodChannelWindowsUserConsentClient
+    implements WindowsUserConsentClient {
   static const MethodChannel _channel = MethodChannel(
     'webauthn_secure_storage',
   );

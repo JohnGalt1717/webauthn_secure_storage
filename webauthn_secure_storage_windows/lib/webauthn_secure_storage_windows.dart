@@ -17,8 +17,8 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   BiometricStorageWindows({
     WindowsCredentialStore? credentialStore,
     WindowsUserConsentClient? userConsentClient,
-  })  : _credentialStore = credentialStore ?? credentialStoreFactory(),
-        _userConsentClient = userConsentClient ?? userConsentClientFactory();
+  }) : _credentialStore = credentialStore ?? credentialStoreFactory(),
+       _userConsentClient = userConsentClient ?? userConsentClientFactory();
 
   final WindowsCredentialStore _credentialStore;
   final WindowsUserConsentClient _userConsentClient;
@@ -49,9 +49,7 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   StorageFileInitOptions _requireInitOptions(String name) {
     final initOptions = _initOptionsByName[name];
     if (initOptions == null) {
-      throw BiometricStorageException(
-        "Storage '$name' was not initialized.",
-      );
+      throw BiometricStorageException("Storage '$name' was not initialized.");
     }
     return initOptions;
   }
@@ -117,7 +115,7 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
           'Windows Hello verification is disabled by policy.',
         );
       case WindowsUserConsentVerificationResult.deviceBusy ||
-      WindowsUserConsentVerificationResult.unknown:
+          WindowsUserConsentVerificationResult.unknown:
         throw BiometricStorageException(
           'Windows Hello is currently unavailable.',
         );
@@ -136,9 +134,9 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   Future<CanAuthenticateResponse> canAuthenticate({
     StorageFileInitOptions? options,
   }) async => _userConsentCanAuthenticate(
-      authenticationRequired:
-          (options ?? StorageFileInitOptions()).authenticationRequired,
-    );
+    authenticationRequired:
+        (options ?? StorageFileInitOptions()).authenticationRequired,
+  );
 
   @override
   Future<bool?> init(
