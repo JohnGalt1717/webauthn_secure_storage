@@ -12,7 +12,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Security.Credentials.UI.h>
 #include <winrt/base.h>
-#include <windows.security.credentials.ui.interop.h>
+#include <userconsentverifierinterop.h>
 
 namespace webauthn_secure_storage_windows {
 
