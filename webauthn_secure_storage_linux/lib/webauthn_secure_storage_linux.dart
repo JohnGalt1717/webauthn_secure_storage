@@ -1,38 +1,60 @@
 import 'package:webauthn_secure_storage_platform_interface/webauthn_secure_storage_platform_interface.dart';
 
-class WebauthnSecureStorageLinux extends BiometricStoragePlatform {
-  /// Registers this class as the default instance of [BiometricStoragePlatform].
+class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
   static void registerWith() {
     BiometricStoragePlatform.instance = WebauthnSecureStorageLinux();
   }
 
   @override
-  Future<CanAuthenticateResponse> checkSupported() async {
-    return CanAuthenticateResponse.unsupported;
+  Future<CanAuthenticateResponse> canAuthenticate({
+    StorageFileInitOptions? options,
+  }) async {
+    final response = await MethodChannelBiometricStoragePlatform.channel
+        .invokeMethod<String>('canAuthenticate', <String, dynamic>{
+          'options': options?.toJson() ?? StorageFileInitOptions().toJson(),
+        });
+    return mapCanAuthenticateResponse(response);
   }
 
   @override
-  Future<String?> read({required String name, required StorageOptions options}) async {
-    throw UnsupportedError('Storage is not supported on Linux yet.');
+  Map<String, dynamic> buildPromptInfoArguments(PromptInfo promptInfo) =>
+      <String, dynamic>{};
+
+  @override
+  Future<PublicKeyCredentialAttestationJson> registerPasskey(
+    PublicKeyCredentialCreationOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'Passkeys are not supported on Linux yet.',
+    );
   }
 
   @override
-  Future<void> write({required String name, required String content, required StorageOptions options}) async {
-    throw UnsupportedError('Storage is not supported on Linux yet.');
+  Future<PublicKeyCredentialAssertionJson> authenticateWithPasskey(
+    PublicKeyCredentialRequestOptionsJson options,
+  ) async {
+    throw UnsupportedError(
+      'Passkeys are not supported on Linux yet.',
+    );
   }
 
   @override
-  Future<void> delete({required String name, required StorageOptions options}) async {
-    throw UnsupportedError('Storage is not supported on Linux yet.');
+  Future<bool> linuxCheckAppArmorError() async {
+    await init(
+      'appArmorCheck',
+      options: StorageFileInitOptions(authenticationRequired: false),
+    );
+    try {
+      await read('appArmorCheck', PromptInfo.defaultValues);
+      return false;
+    } on AuthException catch (e) {
+      if (e.code == AuthExceptionCode.linuxAppArmorDenied) {
+        return true;
+      }
+      rethrow;
+    }
   }
 
   @override
-  Future<PublicKeyCredentialJson> registerPasskey(PublicKeyCredentialCreationOptionsJson options) async {
-    throw UnsupportedError('Passkeys are not supported on Linux yet.');
-  }
-
-  @override
-  Future<PublicKeyCredentialJson> authenticateWithPasskey(PublicKeyCredentialRequestOptionsJson options) async {
-    throw UnsupportedError('Passkeys are not supported on Linux yet.');
-  }
+  Future<void> dispose(String name, PromptInfo promptInfo) async {}
 }
