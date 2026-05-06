@@ -311,6 +311,34 @@ void main() {
         throwsA(isA<AuthException>()),
       );
     });
+
+    test(
+      'delete clears both namespaces so deleted legacy value does not resurface',
+      () async {
+        await plugin.init(
+          'secret',
+          options: StorageFileInitOptions(authenticationRequired: false),
+        );
+
+        // Seed the legacy namespace via the credential store's write API,
+        // using the prefixed key that the plugin uses internally.
+        await credentialStore.write(
+          '${BiometricStorageWindows.legacyNamePrefix}secret',
+          'legacy-value',
+        );
+        // Write via the current API so both namespaces are populated.
+        await plugin.write('secret', 'new-value', PromptInfo.defaultValues);
+
+        // After delete the credential must not be retrievable from either
+        // namespace – the legacy entry must not resurface.
+        expect(await plugin.delete('secret', PromptInfo.defaultValues), isTrue);
+        expect(await plugin.read('secret', PromptInfo.defaultValues), isNull);
+        expect(
+          await plugin.exists('secret', PromptInfo.defaultValues),
+          isFalse,
+        );
+      },
+    );
   });
 }
 

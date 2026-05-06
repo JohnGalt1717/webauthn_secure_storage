@@ -157,8 +157,14 @@ class BiometricStorageWindows extends BiometricStoragePlatform {
   @override
   Future<bool?> delete(String name, PromptInfo promptInfo) async {
     await _ensureUserConsent(name, _WindowsProtectedAction.delete);
-    return await _credentialStore.delete(_storageName(name), name) ||
+    // Both namespaces must always be attempted so that a legacy credential
+    // cannot resurface via _readCurrentOrLegacy after the new-namespace entry
+    // has been deleted.
+    final deletedNew =
+        await _credentialStore.delete(_storageName(name), name);
+    final deletedLegacy =
         await _credentialStore.delete(_storageName(name, legacy: true), name);
+    return deletedNew || deletedLegacy;
   }
 
   @override

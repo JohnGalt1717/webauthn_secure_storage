@@ -4,6 +4,7 @@
 #include <flutter/standard_method_codec.h>
 
 #include <memory>
+#include <mutex>
 #include <string>
 
 namespace webauthn_secure_storage_windows {
@@ -36,13 +37,16 @@ std::string ToUtf8(const std::wstring& value) {
 }
 
 void EnsureApartmentInitialized() {
-  try {
-    winrt::init_apartment();
-  } catch (const winrt::hresult_error& error) {
-    if (error.code() != winrt::hresult{RPC_E_CHANGED_MODE}) {
-      throw;
+  static std::once_flag init_flag;
+  std::call_once(init_flag, []() {
+    try {
+      winrt::init_apartment();
+    } catch (const winrt::hresult_error& error) {
+      if (error.code() != winrt::hresult{RPC_E_CHANGED_MODE}) {
+        throw;
+      }
     }
-  }
+  });
 }
 
 std::string AvailabilityToString(
@@ -170,12 +174,14 @@ HWND WebauthnSecureStorageWindowsPlugin::GetWindow() const {
 void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
     const flutter::MethodCall<flutter::EncodableValue>& method_call,
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
+  // Transfer ownership to a shared_ptr before entering the try block so that
+  // the catch handlers can call result->Error() without accessing a
+  // moved-from (null) unique_ptr.
+  EnsureApartmentInitialized();
+  auto shared_result =
+      std::shared_ptr<flutter::MethodResult<flutter::EncodableValue>>(
+          result.release());
   try {
-    EnsureApartmentInitialized();
-    auto shared_result =
-        std::shared_ptr<flutter::MethodResult<flutter::EncodableValue>>(
-            result.release());
-
     if (method_call.method_name() == kMethodGetUserConsentAvailability) {
       const auto operation =
           winrt::Windows::Security::Credentials::UI::UserConsentVerifier::CheckAvailabilityAsync();
@@ -232,10 +238,10 @@ void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
 
     shared_result->NotImplemented();
   } catch (const winrt::hresult_error& error) {
-    result->Error("WindowsHelloError", ToUtf8(error.message().c_str()),
+    shared_result->Error("WindowsHelloError", ToUtf8(error.message().c_str()),
                   flutter::EncodableValue(error.code().value));
   } catch (const std::exception& error) {
-    result->Error("WindowsHelloError", error.what());
+    shared_result->Error("WindowsHelloError", error.what());
   }
 }
 
