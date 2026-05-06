@@ -1,11 +1,23 @@
 #ifndef FLUTTER_PLUGIN_WEBAUTHN_SECURE_STORAGE_WINDOWS_PLUGIN_PUBLIC_H_
 #define FLUTTER_PLUGIN_WEBAUTHN_SECURE_STORAGE_WINDOWS_PLUGIN_PUBLIC_H_
 
-#include <flutter/plugin_registrar_windows.h>
+#include <flutter_plugin_registrar.h>
 
-#include "../../webauthn_secure_storage_windows_plugin.h"
+#ifdef FLUTTER_PLUGIN_IMPL
+#define FLUTTER_PLUGIN_EXPORT __declspec(dllexport)
+#else
+#define FLUTTER_PLUGIN_EXPORT __declspec(dllimport)
+#endif
 
-void WebauthnSecureStorageWindowsPluginRegisterWithRegistrar(
-	flutter::PluginRegistrarWindows* registrar);
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
+FLUTTER_PLUGIN_EXPORT void WebauthnSecureStorageWindowsPluginRegisterWithRegistrar(
+	FlutterDesktopPluginRegistrarRef registrar);
+
+#if defined(__cplusplus)
+}  // extern "C"
+#endif
 
 #endif  // FLUTTER_PLUGIN_WEBAUTHN_SECURE_STORAGE_WINDOWS_PLUGIN_PUBLIC_H_
