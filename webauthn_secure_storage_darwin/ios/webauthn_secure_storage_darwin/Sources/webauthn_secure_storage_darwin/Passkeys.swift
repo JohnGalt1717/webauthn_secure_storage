@@ -16,7 +16,7 @@ extension String {
     }
 }
 
-@available(iOS 16.0, macOS 12.0, *)
+@available(iOS 16.0, *)
 class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     
     private var result: ((Any?) -> Void)?

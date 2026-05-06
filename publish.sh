@@ -14,7 +14,7 @@ packages=(
 for pkg in "${packages[@]}"; do
   echo "🚀 Publishing $pkg..."
   cd "$pkg"
-  dart pub publish --force
+  dart pub publish
   cd ..
 done
 
