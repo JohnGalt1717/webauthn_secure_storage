@@ -33,14 +33,14 @@ public class BiometricStoragePlugin: NSObject, FlutterPlugin {
                 if let args = call.arguments as? [String: Any], let options = args["options"] as? [String: Any] {
                     impl.registerPasskey(options: options, result: result)
                 } else {
-                    result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: null))
+                    result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: nil))
                 }
                 return
             } else if call.method == "authenticateWithPasskey" {
                 if let args = call.arguments as? [String: Any], let options = args["options"] as? [String: Any] {
                     impl.authenticateWithPasskey(options: options, result: result)
                 } else {
-                    result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: null))
+                    result(FlutterError(code: "InvalidArguments", message: "Invalid options", details: nil))
                 }
                 return
             }
