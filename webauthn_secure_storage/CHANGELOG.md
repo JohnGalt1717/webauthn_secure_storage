@@ -17,6 +17,12 @@
   similar temporarily-unavailable authenticator states.
 - Replace deprecated macOS Keychain prompt/UI query usage with modern
   `LAContext`-based configuration.
+- Add native Windows passkey registration/authentication using Dart FFI against
+  `webauthn.dll`, including real Windows Hello availability reporting.
+- Add Linux desktop biometric-gated storage using `fprintd` and native passkey
+  registration/authentication using `libfido2`.
+- Extend Linux/Windows desktop tests and CI build dependencies to validate the
+  new native desktop authentication flows.
 
 ### Data-migration note for Linux users
 
