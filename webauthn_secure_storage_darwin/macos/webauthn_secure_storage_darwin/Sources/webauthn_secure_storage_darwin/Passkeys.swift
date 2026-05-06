@@ -24,15 +24,14 @@ class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuth
         guard let challengeString = options["challenge"] as? String,
               let challengeData = challengeString.base64UrlDecodedData(),
               let rpItem = options["rp"] as? [String: Any],
+              let rpId = rpItem["id"] as? String,
               let userItem = options["user"] as? [String: Any],
               let userIdString = userItem["id"] as? String,
               let userId = userIdString.base64UrlDecodedData(),
               let userName = userItem["name"] as? String else {
-            result(NSError(domain: "webauthn_secure_storage", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid options"]))
+            result(NSError(domain: "webauthn_secure_storage", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid options: challenge, rp.id, user.id, and user.name are required"]))
             return
         }
-
-        let rpId = (rpItem["id"] as? String) ?? "localhost"
 
         let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: rpId)
         let request = provider.createCredentialRegistrationRequest(challenge: challengeData, name: userName, userID: userId)
@@ -46,12 +45,11 @@ class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuth
     func authenticateWithPasskey(options: [String: Any], result: @escaping (Any?) -> Void) {
         self.result = result
         guard let challengeString = options["challenge"] as? String,
-              let challengeData = challengeString.base64UrlDecodedData() else {
-            result(NSError(domain: "webauthn_secure_storage", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid options"]))
+              let challengeData = challengeString.base64UrlDecodedData(),
+              let rpId = options["rpId"] as? String else {
+            result(NSError(domain: "webauthn_secure_storage", code: 1, userInfo: [NSLocalizedDescriptionKey: "Invalid options: challenge and rpId are required"]))
             return
         }
-
-        let rpId = options["rpId"] as? String ?? "localhost"
 
         let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: rpId)
         let request = provider.createCredentialAssertionRequest(challenge: challengeData)
@@ -68,7 +66,7 @@ class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuth
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
         if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialRegistration {
-            let res: [String: Any] = [
+            let response: [String: Any] = [
                 "id": credential.credentialID.base64EncodedString(),
                 "rawId": credential.credentialID.base64EncodedString(),
                 "type": "public-key",
@@ -77,9 +75,9 @@ class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuth
                     "attestationObject": credential.rawAttestationObject?.base64EncodedString() ?? "",
                 ],
             ]
-            result?(res)
+            result?(response)
         } else if let credential = authorization.credential as? ASAuthorizationPlatformPublicKeyCredentialAssertion {
-            let res: [String: Any] = [
+            let response: [String: Any] = [
                 "id": credential.credentialID.base64EncodedString(),
                 "rawId": credential.credentialID.base64EncodedString(),
                 "type": "public-key",
@@ -90,7 +88,7 @@ class PasskeyImplementation: NSObject, ASAuthorizationControllerDelegate, ASAuth
                     "userHandle": credential.userID?.base64EncodedString() ?? "",
                 ],
             ]
-            result?(res)
+            result?(response)
         } else {
             result?(NSError(domain: "webauthn_secure_storage", code: 2, userInfo: [NSLocalizedDescriptionKey: "Unknown credential"]))
         }
