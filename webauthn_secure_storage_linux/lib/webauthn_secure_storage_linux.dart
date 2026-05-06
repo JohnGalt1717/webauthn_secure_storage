@@ -25,7 +25,7 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
     PublicKeyCredentialCreationOptionsJson options,
   ) async {
     throw UnimplementedError(
-      'Linux Passkeys via libfido2 not fully mocked yet in tests',
+      'Linux passkey support via libfido2 is not yet implemented.',
     );
   }
 
@@ -34,7 +34,7 @@ class WebauthnSecureStorageLinux extends MethodChannelBiometricStoragePlatform {
     PublicKeyCredentialRequestOptionsJson options,
   ) async {
     throw UnimplementedError(
-      'Linux Passkeys via libfido2 not fully mocked yet in tests',
+      'Linux passkey support via libfido2 is not yet implemented.',
     );
   }
 
