@@ -14,35 +14,35 @@ void main() {
       plugin = BiometricStorageAndroid();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        MethodChannelBiometricStoragePlatform.channel,
-        (MethodCall methodCall) async {
-          log.add(methodCall);
-          if (methodCall.method == 'registerPasskey') {
-            return {
-              'id': 'test-id',
-              'rawId': 'test-raw-id',
-              'type': 'public-key',
-              'response': {
-                'clientDataJSON': 'YQ==',
-                'attestationObject': 'YQ=='
+            MethodChannelBiometricStoragePlatform.channel,
+            (MethodCall methodCall) async {
+              log.add(methodCall);
+              if (methodCall.method == 'registerPasskey') {
+                return {
+                  'id': 'test-id',
+                  'rawId': 'test-raw-id',
+                  'type': 'public-key',
+                  'response': {
+                    'clientDataJSON': 'YQ==',
+                    'attestationObject': 'YQ==',
+                  },
+                };
+              } else if (methodCall.method == 'authenticateWithPasskey') {
+                return {
+                  'id': 'test-id',
+                  'rawId': 'test-raw-id',
+                  'type': 'public-key',
+                  'response': {
+                    'clientDataJSON': 'YQ==',
+                    'authenticatorData': 'YQ==',
+                    'signature': 'YQ==',
+                    'userHandle': 'YQ==',
+                  },
+                };
               }
-            };
-          } else if (methodCall.method == 'authenticateWithPasskey') {
-             return {
-              'id': 'test-id',
-              'rawId': 'test-raw-id',
-              'type': 'public-key',
-              'response': {
-                'clientDataJSON': 'YQ==',
-                'authenticatorData': 'YQ==',
-                'signature': 'YQ==',
-                'userHandle': 'YQ=='
-              }
-            };
-          }
-          return null;
-        },
-      );
+              return null;
+            },
+          );
     });
 
     tearDown(() {
@@ -53,7 +53,11 @@ void main() {
       final options = PublicKeyCredentialCreationOptionsJson(
         challenge: 'challenge',
         rp: PublicKeyCredentialRpEntityJson(name: 'RP'),
-        user: PublicKeyCredentialUserEntityJson(id: 'id', name: 'user', displayName: 'User'),
+        user: PublicKeyCredentialUserEntityJson(
+          id: 'id',
+          name: 'user',
+          displayName: 'User',
+        ),
         pubKeyCredParams: [],
       );
 

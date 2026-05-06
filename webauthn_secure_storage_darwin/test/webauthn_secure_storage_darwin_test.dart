@@ -14,35 +14,35 @@ void main() {
       plugin = BiometricStorageDarwin();
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
           .setMockMethodCallHandler(
-        MethodChannelBiometricStoragePlatform.channel,
-        (MethodCall methodCall) async {
-          log.add(methodCall);
-          if (methodCall.method == 'registerPasskey') {
-            return {
-              'id': 'test-id',
-              'rawId': 'test-raw-id',
-              'type': 'public-key',
-              'response': {
-                'clientDataJSON': 'Y2xpZW50RGF0YUpTT04=',
-                'attestationObject': 'YXR0ZXN0YXRpb25PYmplY3Q='
+            MethodChannelBiometricStoragePlatform.channel,
+            (MethodCall methodCall) async {
+              log.add(methodCall);
+              if (methodCall.method == 'registerPasskey') {
+                return {
+                  'id': 'test-id',
+                  'rawId': 'test-raw-id',
+                  'type': 'public-key',
+                  'response': {
+                    'clientDataJSON': 'Y2xpZW50RGF0YUpTT04=',
+                    'attestationObject': 'YXR0ZXN0YXRpb25PYmplY3Q=',
+                  },
+                };
+              } else if (methodCall.method == 'authenticateWithPasskey') {
+                return {
+                  'id': 'test-id',
+                  'rawId': 'test-raw-id',
+                  'type': 'public-key',
+                  'response': {
+                    'clientDataJSON': 'Y2xpZW50RGF0YUpTT04=',
+                    'authenticatorData': 'YXV0aGVudGljYXRvckRhdGE=',
+                    'signature': 'c2lnbmF0dXJl',
+                    'userHandle': 'dXNlckhhbmRsZQ==',
+                  },
+                };
               }
-            };
-          } else if (methodCall.method == 'authenticateWithPasskey') {
-             return {
-              'id': 'test-id',
-              'rawId': 'test-raw-id',
-              'type': 'public-key',
-              'response': {
-                'clientDataJSON': 'Y2xpZW50RGF0YUpTT04=',
-                'authenticatorData': 'YXV0aGVudGljYXRvckRhdGE=',
-                'signature': 'c2lnbmF0dXJl',
-                'userHandle': 'dXNlckhhbmRsZQ=='
-              }
-            };
-          }
-          return null;
-        },
-      );
+              return null;
+            },
+          );
     });
 
     tearDown(() {
@@ -53,7 +53,11 @@ void main() {
       final options = PublicKeyCredentialCreationOptionsJson(
         challenge: 'challenge',
         rp: PublicKeyCredentialRpEntityJson(name: 'RP'),
-        user: PublicKeyCredentialUserEntityJson(id: 'id', name: 'user', displayName: 'User'),
+        user: PublicKeyCredentialUserEntityJson(
+          id: 'id',
+          name: 'user',
+          displayName: 'User',
+        ),
         pubKeyCredParams: [],
       );
 
