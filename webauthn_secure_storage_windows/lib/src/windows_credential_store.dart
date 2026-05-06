@@ -18,37 +18,48 @@ abstract interface class WindowsCredentialStore {
   Future<void> write(String storageName, String content);
 }
 
-class CredentialManagerWindowsCredentialStore implements WindowsCredentialStore {
+class CredentialManagerWindowsCredentialStore
+    implements WindowsCredentialStore {
   static const _credTypeGeneric = 1;
   static const _credPersistLocalMachine = 2;
   static const _errorNotFound = 1168;
+  static final DynamicLibrary _advapi32 = DynamicLibrary.open('Advapi32.dll');
+  static final DynamicLibrary _kernel32 = DynamicLibrary.open('Kernel32.dll');
 
   CredentialManagerWindowsCredentialStore()
-      : _credDelete = DynamicLibrary.open('Advapi32.dll').lookupFunction<
-          Int32 Function(Pointer<Utf16>, Uint32, Uint32),
-          int Function(Pointer<Utf16>, int, int)
-        >('CredDeleteW'),
-        _credRead = DynamicLibrary.open('Advapi32.dll').lookupFunction<
-          Int32 Function(
-            Pointer<Utf16>,
-            Uint32,
-            Uint32,
-            Pointer<Pointer<_Credential>>,
-          ),
-          int Function(Pointer<Utf16>, int, int, Pointer<Pointer<_Credential>>)
-        >('CredReadW'),
-        _credWrite = DynamicLibrary.open('Advapi32.dll').lookupFunction<
-          Int32 Function(Pointer<_Credential>, Uint32),
-          int Function(Pointer<_Credential>, int)
-        >('CredWriteW'),
-        _credFree = DynamicLibrary.open('Advapi32.dll').lookupFunction<
-          Void Function(Pointer<Void>),
-          void Function(Pointer<Void>)
-        >('CredFree'),
-        _getLastError = DynamicLibrary.open('Kernel32.dll').lookupFunction<
-          Uint32 Function(),
-          int Function()
-        >('GetLastError');
+    : _credDelete = _advapi32
+          .lookupFunction<
+            Int32 Function(Pointer<Utf16>, Uint32, Uint32),
+            int Function(Pointer<Utf16>, int, int)
+          >('CredDeleteW'),
+      _credRead = _advapi32
+          .lookupFunction<
+            Int32 Function(
+              Pointer<Utf16>,
+              Uint32,
+              Uint32,
+              Pointer<Pointer<_Credential>>,
+            ),
+            int Function(
+              Pointer<Utf16>,
+              int,
+              int,
+              Pointer<Pointer<_Credential>>,
+            )
+          >('CredReadW'),
+      _credWrite = _advapi32
+          .lookupFunction<
+            Int32 Function(Pointer<_Credential>, Uint32),
+            int Function(Pointer<_Credential>, int)
+          >('CredWriteW'),
+      _credFree = _advapi32
+          .lookupFunction<
+            Void Function(Pointer<Void>),
+            void Function(Pointer<Void>)
+          >('CredFree'),
+      _getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>(
+        'GetLastError',
+      );
 
   final int Function(Pointer<Utf16>, int, int) _credDelete;
   final int Function(Pointer<Utf16>, int, int, Pointer<Pointer<_Credential>>)

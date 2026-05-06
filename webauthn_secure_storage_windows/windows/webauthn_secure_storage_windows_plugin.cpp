@@ -3,6 +3,7 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 
+#include <memory>
 #include <string>
 
 namespace webauthn_secure_storage_windows {
@@ -42,22 +43,6 @@ void EnsureApartmentInitialized() {
       throw;
     }
   }
-}
-
-template <typename TAsyncOperation>
-winrt::Windows::Foundation::AsyncStatus WaitForCompletion(
-    const TAsyncOperation& operation) {
-  const auto async_info = operation.template as<winrt::Windows::Foundation::IAsyncInfo>();
-
-  while (async_info.Status() == winrt::Windows::Foundation::AsyncStatus::Started) {
-    ::SleepEx(16, TRUE);
-  }
-
-  if (async_info.Status() == winrt::Windows::Foundation::AsyncStatus::Error) {
-    throw winrt::hresult_error(async_info.ErrorCode());
-  }
-
-  return async_info.Status();
 }
 
 std::string AvailabilityToString(
@@ -104,6 +89,40 @@ std::string VerificationResultToString(
   }
 
   return "Unknown";
+}
+
+template <typename TResult, typename TAsyncOperation, typename TFormatter>
+void CompleteAsyncOperation(
+    TAsyncOperation operation,
+    std::shared_ptr<flutter::MethodResult<flutter::EncodableValue>> result,
+    TFormatter formatter,
+    std::string canceled_value = "Unknown") {
+  operation.Completed(
+      [operation = std::move(operation), result = std::move(result),
+       formatter = std::move(formatter),
+       canceled_value = std::move(canceled_value)](
+          const auto&, winrt::Windows::Foundation::AsyncStatus status) mutable {
+        try {
+          if (status == winrt::Windows::Foundation::AsyncStatus::Canceled) {
+            result->Success(flutter::EncodableValue(canceled_value));
+            return;
+          }
+
+          if (status == winrt::Windows::Foundation::AsyncStatus::Error) {
+            const auto async_info =
+                operation.template as<winrt::Windows::Foundation::IAsyncInfo>();
+            throw winrt::hresult_error(async_info.ErrorCode());
+          }
+
+          const TResult operation_result = operation.GetResults();
+          result->Success(flutter::EncodableValue(formatter(operation_result)));
+        } catch (const winrt::hresult_error& error) {
+          result->Error("WindowsHelloError", ToUtf8(error.message().c_str()),
+                        flutter::EncodableValue(error.code().value));
+        } catch (const std::exception& error) {
+          result->Error("WindowsHelloError", error.what());
+        }
+      });
 }
 
 }  // namespace
@@ -153,18 +172,17 @@ void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
     std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
   try {
     EnsureApartmentInitialized();
+    auto shared_result =
+        std::shared_ptr<flutter::MethodResult<flutter::EncodableValue>>(
+            result.release());
 
     if (method_call.method_name() == kMethodGetUserConsentAvailability) {
       const auto operation =
           winrt::Windows::Security::Credentials::UI::UserConsentVerifier::CheckAvailabilityAsync();
-      const auto status = WaitForCompletion(operation);
-      if (status == winrt::Windows::Foundation::AsyncStatus::Canceled) {
-        result->Success(flutter::EncodableValue("Unknown"));
-        return;
-      }
-
-      result->Success(flutter::EncodableValue(
-          AvailabilityToString(operation.GetResults())));
+      CompleteAsyncOperation<
+          winrt::Windows::Security::Credentials::UI::
+              UserConsentVerifierAvailability>(
+          operation, std::move(shared_result), AvailabilityToString, "Unknown");
       return;
     }
 
@@ -172,8 +190,9 @@ void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
       const auto* arguments =
           std::get_if<flutter::EncodableMap>(method_call.arguments());
       if (arguments == nullptr) {
-        result->Error("InvalidArguments",
-                      "Expected a map containing a verification reason.");
+        shared_result->Error(
+            "InvalidArguments",
+            "Expected a map containing a verification reason.");
         return;
       }
 
@@ -187,8 +206,9 @@ void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
 
       const auto window = GetWindow();
       if (window == nullptr) {
-        result->Error("WindowsHelloError",
-                      "Unable to determine a parent window for Windows Hello.");
+        shared_result->Error(
+            "WindowsHelloError",
+            "Unable to determine a parent window for Windows Hello.");
         return;
       }
 
@@ -202,18 +222,15 @@ void WebauthnSecureStorageWindowsPlugin::HandleMethodCall(
                   UserConsentVerificationResult>>(
           interop, &IUserConsentVerifierInterop::RequestVerificationForWindowAsync,
           window, reinterpret_cast<HSTRING>(winrt::get_abi(reason_hstring)));
-      const auto status = WaitForCompletion(operation);
-      if (status == winrt::Windows::Foundation::AsyncStatus::Canceled) {
-        result->Success(flutter::EncodableValue("Canceled"));
-        return;
-      }
-
-      result->Success(flutter::EncodableValue(
-          VerificationResultToString(operation.GetResults())));
+      CompleteAsyncOperation<
+          winrt::Windows::Security::Credentials::UI::
+              UserConsentVerificationResult>(
+          operation, std::move(shared_result), VerificationResultToString,
+          "Canceled");
       return;
     }
 
-    result->NotImplemented();
+    shared_result->NotImplemented();
   } catch (const winrt::hresult_error& error) {
     result->Error("WindowsHelloError", ToUtf8(error.message().c_str()),
                   flutter::EncodableValue(error.code().value));
