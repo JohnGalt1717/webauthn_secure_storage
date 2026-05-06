@@ -3,6 +3,10 @@ import AuthenticationServices
 import FlutterMacOS
 import AppKit
 
+// NOTE: base64UrlDecodedData() is intentionally duplicated between the iOS and macOS
+// Swift packages. The two packages are separate SPM targets with independent source
+// directories, so a single shared file cannot be referenced by both without restructuring
+// the package layout (consistent with how BiometricStorageImpl.swift is also duplicated).
 private extension String {
     func base64UrlDecodedData() -> Data? {
         var base64 = self
