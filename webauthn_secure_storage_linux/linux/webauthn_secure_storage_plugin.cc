@@ -367,8 +367,9 @@ static gboolean set_passkey_error(
   ensure_passkey_error_quark();
   va_list arguments;
   va_start(arguments, format);
-  g_set_error_valist(error, kPasskeyErrorQuark, 0, format, arguments);
+  g_autofree gchar *message = g_strdup_vprintf(format, arguments);
   va_end(arguments);
+  g_set_error(error, kPasskeyErrorQuark, 0, "%s", message);
   return FALSE;
 }
 
