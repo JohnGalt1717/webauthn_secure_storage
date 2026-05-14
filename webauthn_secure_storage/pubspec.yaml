@@ -1,6 +1,6 @@
 name: webauthn_secure_storage
 description: App-facing package for the webauthn_secure_storage federated plugin.
-version: 0.2.2
+version: 0.2.3
 homepage: https://github.com/JohnGalt1717/webauthn_secure_storage
 
 resolution: workspace
@@ -13,7 +13,7 @@ dependencies:
   flutter:
     sdk: flutter
   webauthn_secure_storage_android: ^0.2.0
-  webauthn_secure_storage_darwin: ^0.2.0
+  webauthn_secure_storage_darwin: ^0.2.1
   webauthn_secure_storage_linux: ^0.2.0
   webauthn_secure_storage_platform_interface: ^0.2.0
   webauthn_secure_storage_web: ^0.2.0

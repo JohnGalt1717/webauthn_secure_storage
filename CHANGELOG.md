@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3
+
+- Fix the macOS secure-storage plugin lifecycle so initialized biometric
+  storage instances persist across method calls instead of losing state.
+- Bump the Darwin implementation package and app-facing package versions for a
+  release that includes the macOS fix.
+
 ## 0.2.2
 
 - Refresh GitHub Actions dependencies to current Node 24-compatible major

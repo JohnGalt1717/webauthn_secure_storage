@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3
+
+- Pull in the Darwin plugin fix for macOS so biometric secure-storage handles
+  keep their initialized state across calls instead of being recreated between
+  operations.
+
 ## 0.2.2
 
 - Clarify the package documentation so authenticated Windows secure-storage

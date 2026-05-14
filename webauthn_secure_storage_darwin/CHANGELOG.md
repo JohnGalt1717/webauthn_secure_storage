@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Fix the macOS plugin lifecycle so `BiometricStorageImpl` persists across
+  method calls, preserving initialized secure-storage instances for later
+  reads, writes, deletes, and existence checks.
+
 ## 0.2.0
 
 - Rebrand the federated plugin family from `biometric_storage` to
