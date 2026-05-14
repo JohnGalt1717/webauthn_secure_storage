@@ -4,6 +4,9 @@ import FlutterMacOS
 public class BiometricStorageMacOSPlugin: NSObject, FlutterPlugin {
 
     private var passkeyImpl: Any? // Store reference to prevent deallocation
+    private let biometricImpl = BiometricStorageImpl(storageError: { (code, message, details) -> Any in
+        FlutterError(code: code, message: message, details: details)
+    }, storageMethodNotImplemented: FlutterMethodNotImplemented)
 
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "webauthn_secure_storage", binaryMessenger: registrar.messenger)
@@ -33,9 +36,6 @@ public class BiometricStorageMacOSPlugin: NSObject, FlutterPlugin {
             }
         }
 
-        let biometricImpl = BiometricStorageImpl(storageError: { (code, message, details) -> Any in
-            FlutterError(code: code, message: message, details: details)
-        }, storageMethodNotImplemented: FlutterMethodNotImplemented)
         biometricImpl.handle(StorageMethodCall(method: call.method, arguments: call.arguments), result: result)
     }
 }
