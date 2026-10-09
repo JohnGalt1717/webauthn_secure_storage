@@ -4,6 +4,7 @@
 
 - Pull in the Linux plugin fix so `getPasskeyAvailability` no longer aborts
   the Flutter GTK process (`Unexpected FlValue type` / `free(): invalid pointer`).
+- Pull in the Windows 0.2.2 compile fix for VS 18 / MSVC 14.51.
 
 ## 0.2.3
 

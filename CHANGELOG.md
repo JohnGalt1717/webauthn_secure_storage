@@ -5,6 +5,10 @@
 - Fix a Linux desktop abort on `getPasskeyAvailability` caused by
   `g_autoptr(FlValue)` plus `fl_value_set_string_take` double-freeing the
   metadata map. Apply the same ownership fix to register-passkey `transports`.
+- Silence MSVC STL1011 experimental-coroutine deprecation in the Windows
+  plugin so example `flutter build windows` compiles on VS 18 / MSVC 14.51.
+- Raise the example Android Gradle wrapper to 8.14, AGP to 8.11.1, and
+  Kotlin to 2.2.20 so `flutter build appbundle` meets Flutter 3.47 floors.
 
 ## 0.2.3
 
