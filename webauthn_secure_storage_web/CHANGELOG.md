@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1
+
+- Ship with the 0.2.4 app-facing family (Linux `getPasskeyAvailability` abort
+  fix and Windows VS 18 compile fix).
+
 ## 0.2.0
 
 - Rebrand the federated plugin family from `biometric_storage` to

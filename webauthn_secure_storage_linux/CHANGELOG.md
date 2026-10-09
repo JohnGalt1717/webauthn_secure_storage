@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2
+
+- Release the 0.2.1 FlValue ownership fix with the rest of the 0.2.4 family.
+
 ## 0.2.1
 
 - Fix a Linux desktop abort on `getPasskeyAvailability` caused by
