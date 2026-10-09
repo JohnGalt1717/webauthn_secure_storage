@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.4
+
+- Pull in the Linux plugin fix so `getPasskeyAvailability` no longer aborts
+  the Flutter GTK process (`Unexpected FlValue type` / `free(): invalid pointer`).
+
 ## 0.2.3
 
 - Pull in the Darwin plugin fix for macOS so biometric secure-storage handles

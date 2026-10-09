@@ -615,7 +615,7 @@ static FlMethodResponse *handle_get_passkey_availability(void) {
   set_map_bool(result, "supportsPrfStorage", FALSE);
   set_map_bool(result, "isPrfStorageAvailable", FALSE);
 
-  g_autoptr(FlValue) metadata = fl_value_new_map();
+  FlValue *metadata = fl_value_new_map();
   set_map_string_if_present(metadata, "manufacturer", manufacturer);
   set_map_string_if_present(metadata, "product", product);
 
@@ -634,6 +634,8 @@ static FlMethodResponse *handle_get_passkey_availability(void) {
 
   if (fl_value_get_length(metadata) > 0) {
     fl_value_set_string_take(result, "metadata", metadata);
+  } else {
+    fl_value_unref(metadata);
   }
 
   if (device != NULL) {
@@ -880,7 +882,7 @@ static FlMethodResponse *handle_register_passkey(FlValue *args) {
   set_map_int(result, "publicKeyAlgorithm", fido_cred_type(credential));
   set_map_string_if_present(result, "format", fido_cred_fmt(credential));
   fl_value_set_string_take(result, "authenticatorAttachment", fl_value_new_string("cross-platform"));
-  g_autoptr(FlValue) transports = fl_value_new_list();
+  FlValue *transports = fl_value_new_list();
   fl_value_append_take(transports, fl_value_new_string("usb"));
   fl_value_set_string_take(result, "transports", transports);
 

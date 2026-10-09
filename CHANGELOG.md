@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.4
+
+- Fix a Linux desktop abort on `getPasskeyAvailability` caused by
+  `g_autoptr(FlValue)` plus `fl_value_set_string_take` double-freeing the
+  metadata map. Apply the same ownership fix to register-passkey `transports`.
+
 ## 0.2.3
 
 - Fix the macOS secure-storage plugin lifecycle so initialized biometric
