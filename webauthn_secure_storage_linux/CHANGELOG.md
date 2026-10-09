@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Fix a Linux desktop abort on `getPasskeyAvailability` caused by
+  `g_autoptr(FlValue)` plus `fl_value_set_string_take` double-freeing the
+  metadata map (and the same pattern on register-passkey `transports`).
+
 ## 0.2.0
 
 - Rebrand the federated plugin family from `biometric_storage` to
