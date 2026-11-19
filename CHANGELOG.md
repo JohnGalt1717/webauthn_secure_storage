@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.2.4
+
+- Fix a Linux desktop abort on `getPasskeyAvailability` caused by
+  `g_autoptr(FlValue)` plus `fl_value_set_string_take` double-freeing the
+  metadata map. Apply the same ownership fix to register-passkey `transports`.
+- Silence MSVC STL1011 experimental-coroutine deprecation in the Windows
+  plugin so example `flutter build windows` compiles on VS 18 / MSVC 14.51.
+- Raise the example Android Gradle wrapper to 8.14, AGP to 8.11.1, and
+  Kotlin to 2.2.20 so `flutter build appbundle` meets Flutter 3.47 floors.
+- Align unpublished federated package versions so `publish.sh` can ship the
+  whole family: platform_interface 0.2.1, android 0.2.1, darwin 0.2.2,
+  linux 0.2.2, web 0.2.1, windows 0.2.2, app-facing 0.2.4.
+
 ## 0.2.3
 
 - Fix the macOS secure-storage plugin lifecycle so initialized biometric

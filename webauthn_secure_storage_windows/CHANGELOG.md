@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2
+
+- Silence MSVC STL1011 experimental-coroutine deprecation so the WinRT
+  consent plugin compiles with Visual Studio 18 / MSVC 14.51.
+
 ## 0.2.1
 
 - Prompt Windows Hello before each protected secure-storage read, write, delete,
