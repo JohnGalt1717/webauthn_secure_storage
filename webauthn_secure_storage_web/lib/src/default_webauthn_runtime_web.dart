@@ -24,8 +24,9 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
   @override
   Future<WebAuthnSupport> probeSupport() async {
     final publicKeyCredential = _publicKeyCredentialConstructor as JSObject?;
-    final hasCredentialsApi =
-        (web.window.navigator as JSObject).has('credentials');
+    final hasCredentialsApi = (web.window.navigator as JSObject).has(
+      'credentials',
+    );
     final isSecureContext = web.window.isSecureContext;
     final hasPublicKeyCredential = publicKeyCredential != null;
 
@@ -57,15 +58,18 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
     var hasConditionalUi = false;
     if (publicKeyCredential.has('getClientCapabilities')) {
       try {
-        final capabilities =
-            await publicKeyCredential.callMethodVarArgs<JSPromise<JSObject>>(
-          'getClientCapabilities'.toJS,
-          const <JSAny?>[],
-        ).toDart;
-        supportsPrf = _jsBoolProperty(capabilities, 'extension:prf') ??
+        final capabilities = await publicKeyCredential
+            .callMethodVarArgs<JSPromise<JSObject>>(
+              'getClientCapabilities'.toJS,
+              const <JSAny?>[],
+            )
+            .toDart;
+        supportsPrf =
+            _jsBoolProperty(capabilities, 'extension:prf') ??
             _jsBoolProperty(capabilities, 'prf') ??
             false;
-        hasConditionalUi = _jsBoolProperty(capabilities, 'conditionalGet') ??
+        hasConditionalUi =
+            _jsBoolProperty(capabilities, 'conditionalGet') ??
             _jsBoolProperty(capabilities, 'conditionalMediation') ??
             false;
       } catch (_) {
@@ -116,10 +120,12 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       'iv': iv,
     });
     final encryptedBuffer = await (web.window.crypto.subtle as JSObject)
-        .callMethodVarArgs<JSPromise<JSArrayBuffer>>(
-      'encrypt'.toJS,
-      <JSAny?>[algorithm, key, plaintext.toJS],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSArrayBuffer>>('encrypt'.toJS, <JSAny?>[
+          algorithm,
+          key,
+          plaintext.toJS,
+        ])
+        .toDart;
     final encryptedBytes = Uint8List.fromList(
       Uint8List.view(encryptedBuffer.toDart),
     );
@@ -145,10 +151,12 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
 
     try {
       final decryptedBuffer = await (web.window.crypto.subtle as JSObject)
-          .callMethodVarArgs<JSPromise<JSArrayBuffer>>(
-        'decrypt'.toJS,
-        <JSAny?>[algorithm, key, encryptedBytes.toJS],
-      ).toDart;
+          .callMethodVarArgs<JSPromise<JSArrayBuffer>>('decrypt'.toJS, <JSAny?>[
+            algorithm,
+            key,
+            encryptedBytes.toJS,
+          ])
+          .toDart;
       return Uint8List.fromList(Uint8List.view(decryptedBuffer.toDart));
     } catch (error) {
       throw BiometricStorageException(
@@ -158,20 +166,16 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
   }
 
   Future<JSObject> _importAesKey(Uint8List keyBytes, List<String> usages) {
-    final algorithm = _jsifyObject(<String, Object?>{
-      'name': 'AES-GCM',
-    });
+    final algorithm = _jsifyObject(<String, Object?>{'name': 'AES-GCM'});
     return (web.window.crypto.subtle as JSObject)
-        .callMethodVarArgs<JSPromise<JSObject>>(
-      'importKey'.toJS,
-      <JSAny?>[
-        'raw'.toJS,
-        keyBytes.toJS,
-        algorithm,
-        false.toJS,
-        _jsifyArray(usages),
-      ],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSObject>>('importKey'.toJS, <JSAny?>[
+          'raw'.toJS,
+          keyBytes.toJS,
+          algorithm,
+          false.toJS,
+          _jsifyArray(usages),
+        ])
+        .toDart;
   }
 
   @override
@@ -211,10 +215,8 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
     final options = JSObject()..['publicKey'] = publicKey;
 
     final credential = await (navigator['credentials']! as JSObject)
-        .callMethodVarArgs<JSPromise<JSAny?>>(
-      'create'.toJS,
-      <JSAny?>[options],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSAny?>>('create'.toJS, <JSAny?>[options])
+        .toDart;
     if (credential == null) {
       throw BiometricStorageException(
         'Browser did not return a WebAuthn credential during setup.',
@@ -227,8 +229,9 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       const <JSAny?>[],
     );
     final prfResult = _jsObjectProperty(extensionResults, 'prf');
-    final enabled =
-        prfResult == null ? null : _jsBoolProperty(prfResult, 'enabled');
+    final enabled = prfResult == null
+        ? null
+        : _jsBoolProperty(prfResult, 'enabled');
     if (enabled != true) {
       throw UnsupportedError(webAuthnUnsupportedMessage);
     }
@@ -243,10 +246,10 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
     final navigator = web.window.navigator as JSObject;
     final publicKey = _publicKeyCreationOptionsToJs(options);
     final credential = await (navigator['credentials']! as JSObject)
-        .callMethodVarArgs<JSPromise<JSAny?>>(
-      'create'.toJS,
-      <JSAny?>[JSObject()..['publicKey'] = publicKey],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSAny?>>('create'.toJS, <JSAny?>[
+          JSObject()..['publicKey'] = publicKey,
+        ])
+        .toDart;
     if (credential == null) {
       throw BiometricStorageException(
         'Browser did not return a WebAuthn credential during passkey registration.',
@@ -263,10 +266,10 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
     final navigator = web.window.navigator as JSObject;
     final publicKey = _publicKeyRequestOptionsToJs(options);
     final credential = await (navigator['credentials']! as JSObject)
-        .callMethodVarArgs<JSPromise<JSAny?>>(
-      'get'.toJS,
-      <JSAny?>[JSObject()..['publicKey'] = publicKey],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSAny?>>('get'.toJS, <JSAny?>[
+          JSObject()..['publicKey'] = publicKey,
+        ])
+        .toDart;
     if (credential == null) {
       throw AuthException(
         AuthExceptionCode.canceled,
@@ -289,20 +292,15 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       ..['timeout'] = _timeoutMs.toJS
       ..['userVerification'] = 'required'.toJS
       ..['allowCredentials'] = _jsifyArray(<Object?>[
-        <String, Object>{
-          'id': credentialId,
-          'type': 'public-key',
-        },
+        <String, Object>{'id': credentialId, 'type': 'public-key'},
       ])
       ..['extensions'] = _buildPrfExtensions(prfSalt);
 
     final options = JSObject()..['publicKey'] = publicKey;
 
     final credential = await (navigator['credentials']! as JSObject)
-        .callMethodVarArgs<JSPromise<JSAny?>>(
-      'get'.toJS,
-      <JSAny?>[options],
-    ).toDart;
+        .callMethodVarArgs<JSPromise<JSAny?>>('get'.toJS, <JSAny?>[options])
+        .toDart;
     if (credential == null) {
       throw AuthException(
         AuthExceptionCode.canceled,
@@ -316,8 +314,9 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       const <JSAny?>[],
     );
     final prfResult = _jsObjectProperty(extensionResults, 'prf');
-    final results =
-        prfResult == null ? null : _jsObjectProperty(prfResult, 'results');
+    final results = prfResult == null
+        ? null
+        : _jsObjectProperty(prfResult, 'results');
     final first = results == null ? null : _jsObjectProperty(results, 'first');
     if (first == null) {
       throw UnsupportedError(webAuthnUnsupportedMessage);
@@ -342,9 +341,7 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
   JSObject _buildPrfExtensions(Uint8List prfSalt) =>
       _jsifyObject(<String, Object?>{
         'prf': <String, Object>{
-          'eval': <String, Object>{
-            'first': prfSalt,
-          },
+          'eval': <String, Object>{'first': prfSalt},
         },
       });
 
@@ -432,10 +429,12 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
     final clientExtensionResults = _clientExtensionResultsFrom(credential);
     final transports = response.has('getTransports')
         ? _stringListFromDart(
-            response.callMethodVarArgs<JSAny?>(
-              'getTransports'.toJS,
-              const <JSAny?>[],
-            ).dartify(),
+            response
+                .callMethodVarArgs<JSAny?>(
+                  'getTransports'.toJS,
+                  const <JSAny?>[],
+                )
+                .dartify(),
           )
         : null;
     final publicKey = response.has('getPublicKey')
@@ -455,11 +454,14 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
           )
         : null;
     final publicKeyAlgorithm = response.has('getPublicKeyAlgorithm')
-        ? (response.callMethodVarArgs<JSAny?>(
-            'getPublicKeyAlgorithm'.toJS,
-            const <JSAny?>[],
-          ).dartify() as num?)
-            ?.toInt()
+        ? (response
+                      .callMethodVarArgs<JSAny?>(
+                        'getPublicKeyAlgorithm'.toJS,
+                        const <JSAny?>[],
+                      )
+                      .dartify()
+                  as num?)
+              ?.toInt()
         : null;
 
     final rawId = _base64Encode(_arrayBufferToBytes(credential['rawId']!));
@@ -467,8 +469,10 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       id: _jsStringProperty(credential, 'id') ?? rawId,
       rawId: rawId,
       type: _jsStringProperty(credential, 'type') ?? 'public-key',
-      authenticatorAttachment:
-          _jsStringProperty(credential, 'authenticatorAttachment'),
+      authenticatorAttachment: _jsStringProperty(
+        credential,
+        'authenticatorAttachment',
+      ),
       response: AuthenticatorAttestationResponseJson(
         clientDataJSON: _tryBase64UrlEncode(response['clientDataJSON'])!,
         attestationObject: _tryBase64UrlEncode(response['attestationObject'])!,
@@ -496,8 +500,10 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
       id: _jsStringProperty(credential, 'id') ?? rawId,
       rawId: rawId,
       type: _jsStringProperty(credential, 'type') ?? 'public-key',
-      authenticatorAttachment:
-          _jsStringProperty(credential, 'authenticatorAttachment'),
+      authenticatorAttachment: _jsStringProperty(
+        credential,
+        'authenticatorAttachment',
+      ),
       response: AuthenticatorAssertionResponseJson(
         clientDataJSON: _tryBase64UrlEncode(response['clientDataJSON'])!,
         authenticatorData: _tryBase64UrlEncode(response['authenticatorData'])!,
@@ -518,10 +524,7 @@ class BrowserWebAuthnRuntime implements WebAuthnRuntime {
   }
 }
 
-const Set<String> _extensionBinaryKeys = <String>{
-  'first',
-  'second',
-};
+const Set<String> _extensionBinaryKeys = <String>{'first', 'second'};
 
 String? _jsStringProperty(Object object, String property) {
   final jsObject = _asJSObject(object);
@@ -633,14 +636,6 @@ JSObject? _asJSObject(Object object) {
   }
 }
 
-JSAny? _asJSAny(Object? object) {
-  try {
-    return object as JSAny;
-  } catch (_) {
-    return null;
-  }
-}
-
 String _base64Encode(Uint8List value) =>
     base64UrlEncode(value).replaceAll('=', '');
 
@@ -652,17 +647,15 @@ Uint8List _decodeBase64UrlString(String value) {
   return Uint8List.fromList(base64Url.decode(normalized));
 }
 
+/// Converts a value to a JSON-compatible value, converting ArrayBuffer and
+/// Uint8Array to base64 strings, and recursively converting Maps and Lists.
 Object? _normalizeJsonCompatibleValue(Object? value) {
-  if (value == null || value is String || value is bool || value is num) {
+  if (value == null || value is bool || value is num || value is String) {
     return value;
   }
-  final jsValue = _asJSAny(value);
-  if (jsValue != null) {
-    final bytes = _tryBase64UrlEncode(jsValue);
-    if (bytes != null) {
-      return bytes;
-    }
-    return _normalizeJsonCompatibleValue(jsValue.dartify());
+
+  if (value is Uint8List) {
+    return _base64Encode(value);
   }
   if (value is ByteBuffer) {
     return _base64Encode(Uint8List.view(value));
@@ -672,22 +665,36 @@ Object? _normalizeJsonCompatibleValue(Object? value) {
       value.buffer.asUint8List(value.offsetInBytes, value.lengthInBytes),
     );
   }
-  if (value is Uint8List) {
-    return _base64Encode(value);
-  }
+
   if (value is List) {
-    return value
-        .map<Object?>((Object? item) => _normalizeJsonCompatibleValue(item))
-        .toList(growable: false);
+    final len = value.length;
+    final out = List<Object?>.filled(len, null, growable: false);
+    for (var i = 0; i < len; i++) {
+      out[i] = _normalizeJsonCompatibleValue(value[i]);
+    }
+    return out;
   }
   if (value is Map) {
-    return value.map<String, dynamic>(
-      (dynamic key, dynamic mapValue) => MapEntry<String, dynamic>(
-        key as String,
-        _normalizeJsonCompatibleValue(mapValue),
-      ),
-    );
+    final out = <String, dynamic>{};
+    value.forEach((key, val) {
+      out[key.toString()] = _normalizeJsonCompatibleValue(val);
+    });
+    return out;
   }
+
+  if (value.isA<JSAny>()) {
+    // directly convert JSArrayBuffer and JSUint8Array to base64 string to avoid dartify()
+    if (value.isA<JSArrayBuffer>()) {
+      return _base64Encode(Uint8List.view((value as JSArrayBuffer).toDart));
+    }
+
+    // directly convert JSUint8Array to base64 string to avoid dartify()
+    if (value.isA<JSUint8Array>()) {
+      return _base64Encode((value as JSUint8Array).toDart);
+    }
+    return _normalizeJsonCompatibleValue((value as JSAny).dartify());
+  }
+
   return value.toString();
 }
 
